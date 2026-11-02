@@ -9,6 +9,8 @@
 同日补充 [本地 Skill 安装器](../integrations/installer/README.md)，显式选择 Codex/Claude/OpenCode 和范围；
 安装/回滚与真实项目发现记录见 [安装器交付](INSTALLER_DELIVERY.md)。自动下载和已发布 npm 包尚未提供。
 MCP 的版本限定配置与真实宿主调用结果另见 [MCP 客户端实测](MCP_HOST_VALIDATION.md)。
+2026-11-03 补充 [OpenCode V2 MCP 验收](OPENCODE_V2_ACCEPTANCE.md)：已安装版本为 `2.2.5`。
+下表 OpenCode Skill 发现记录仍对应 V1 `1.19.4`；V2 Skill 发现与模型触发尚未实测。
 
 ## 官方发现规则与本机版本
 
