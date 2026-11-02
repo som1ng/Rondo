@@ -8,6 +8,9 @@ export const SERVER_NAME = 'dll_doctor';
 export const hash = data => createHash('sha256').update(data).digest('hex');
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const key = agent => agent === 'claude' ? 'mcpServers' : agent === 'codex' ? 'mcp_servers' : 'mcp';
+const entryPath = (agent, entry) => agent === 'opencode' && entry.enabled !== true
+  ? ['mcp', 'servers', SERVER_NAME] : [key(agent), SERVER_NAME];
+const at = (data, location) => location.reduce((value, name) => value?.[name], data);
 const fail = message => { throw new InstallError('MCP_CONFIG', message); };
 // Parsers use null-prototype objects; compare the JSON-compatible managed entry by value.
 const plainEntry = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
@@ -49,8 +52,19 @@ export function inspectConfig(agent, text) {
     unique(tree);
     const data = getNodeValue(tree);
     if (data[key(agent)] !== undefined && !object(data[key(agent)])) fail('MCP container must be an object.');
-    const node = findNodeAtLocation(tree, [key(agent), SERVER_NAME]);
+    let location = [key(agent), SERVER_NAME];
+    if (agent === 'opencode' && data.mcp?.servers !== undefined) {
+      if (!object(data.mcp.servers) || typeof data.mcp.servers.type === 'string') {
+        fail('OpenCode mcp.servers must be a V2 server map, not a legacy server named servers.');
+      }
+      if (Object.hasOwn(data.mcp.servers, SERVER_NAME)) {
+        if (Object.hasOwn(data.mcp, SERVER_NAME)) fail('Both legacy and V2 dll_doctor entries exist; resolve the conflict first.');
+        location = ['mcp', 'servers', SERVER_NAME];
+      }
+    }
+    const node = findNodeAtLocation(tree, location);
     return { data, entry: node ? plainEntry(getNodeValue(node)) : undefined,
+      entryPath: node ? location : undefined,
       entryRange: node ? [node.offset, node.offset + node.length] : undefined,
       entryTextHash: node ? hash(text.slice(node.offset, node.offset + node.length)) : undefined };
   } catch (error) {
@@ -59,16 +73,22 @@ export function inspectConfig(agent, text) {
   }
 }
 
-export function mcpEntry(agent, runtime) {
+export function mcpEntry(agent, runtime, previous) {
   const args = [runtime.server.path, '--cli', runtime.cli.path];
   for (const root of runtime.roots) args.push('--allow-root', root);
   if (runtime.allowProcesses) args.push('--allow-processes');
-  return agent === 'opencode' ? { type: 'local', command: [runtime.node, ...args], enabled: true }
-    : { command: runtime.node, args };
+  if (agent !== 'opencode') return { command: runtime.node, args };
+  // Keep an owned V1 entry in place during upgrades: V2 loads it compatibly,
+  // and the recovery journal only replaces text inside the managed entry.
+  const legacy = previous ? previous.enabled === true : runtime.client?.version === '1.19.4';
+  return { type: 'local', command: [runtime.node, ...args],
+    ...(legacy ? { enabled: true } : { disabled: false, codemode: false }) };
 }
 
 export function addEntry(agent, original, entry) {
-  const text = original ?? (agent === 'codex' ? '' : '{}\n');
+  const location = entryPath(agent, entry);
+  const text = original ?? (agent === 'codex' ? '' : location.length === 3
+    ? '{\n  "$schema": "https://opencode.ai/config.json"\n}\n' : '{}\n');
   const before = inspectConfig(agent, text);
   if (before.entry !== undefined) fail('An unowned dll_doctor entry already exists.');
   let updated, block;
@@ -78,20 +98,23 @@ export function addEntry(agent, original, entry) {
       + '\n# END dll-doctor managed MCP\n';
     updated = text + block;
   } else {
-    updated = applyEdits(text, modify(text, [key(agent), SERVER_NAME], entry,
+    updated = applyEdits(text, modify(text, location, entry,
       { formattingOptions: { insertSpaces: true, tabSize: 2, eol: text.includes('\r\n') ? '\r\n' : '\n' } }));
   }
   const after = inspectConfig(agent, updated);
   preserveComments(agent, text, updated);
   if (!isDeepStrictEqual(after.entry, entry)) fail('Configuration layout cannot accept the managed entry.');
   return { text: updated, ownership: { block, entryTextHash: after.entryTextHash,
-    containerCreated: before.data[key(agent)] === undefined, configCreated: original === null,
+    containerCreated: at(before.data, location.slice(0, -1)) === undefined, configCreated: original === null,
     installedHash: hash(updated) } };
 }
 
 export function assertOwned(agent, text, record) {
   const observed = inspectConfig(agent, text);
   if (!isDeepStrictEqual(observed.entry, record.entry)) fail('Managed MCP values changed or are missing; preserving configuration.');
+  if (agent === 'opencode' && !isDeepStrictEqual(observed.entryPath, entryPath(agent, record.entry))) {
+    fail('Managed MCP layout changed; preserving configuration.');
+  }
   if (agent === 'codex') {
     if (typeof record.ownership.block !== 'string' || !record.ownership.block.startsWith('\n# BEGIN dll-doctor managed MCP\n')
         || text.split(record.ownership.block).length !== 2) fail('Managed TOML block changed; preserving configuration.');
@@ -121,9 +144,10 @@ export function removeEntry(agent, text, record) {
   let updated;
   if (agent === 'codex') updated = text.replace(record.ownership.block, '');
   else {
-    const container = inspectConfig(agent, text).data[key(agent)];
+    const managed = entryPath(agent, record.entry), parent = managed.slice(0, -1);
+    const container = at(inspectConfig(agent, text).data, parent);
     const location = unchanged && record.ownership.containerCreated && Object.keys(container).length === 1
-      ? [key(agent)] : [key(agent), SERVER_NAME];
+      ? parent : managed;
     updated = applyEdits(text, modify(text, location, undefined, {}));
   }
   if (inspectConfig(agent, updated).entry !== undefined) fail('Managed entry could not be removed.');
@@ -135,7 +159,7 @@ export function updateEntry(agent, text, record, entry) {
   assertOwned(agent, text, record);
   const canonical = addEntry(agent, null, entry);
   const updated = agent === 'codex' ? text.replace(record.ownership.block, canonical.ownership.block)
-    : applyEdits(text, modify(text, [key(agent), SERVER_NAME], entry,
+    : applyEdits(text, modify(text, entryPath(agent, record.entry), entry,
       { formattingOptions: { insertSpaces: true, tabSize: 2, eol: text.includes('\r\n') ? '\r\n' : '\n' } }));
   const after = inspectConfig(agent, updated);
   preserveComments(agent, text, updated);

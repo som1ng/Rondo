@@ -58,6 +58,9 @@ jobs:
       - name: Test Codex acceptance evidence checks (no model calls)
         if: matrix.architecture == 'msvc-x64' && matrix.configuration == 'release'
         run: python tests/codex_acceptance_tests.py
+      - name: Test OpenCode V2 acceptance evidence checks (no model calls)
+        if: matrix.architecture == 'msvc-x64' && matrix.configuration == 'release'
+        run: python tests/opencode_acceptance_tests.py
       - name: Install GUI test dependencies
         if: matrix.architecture == 'msvc-x64' && matrix.configuration == 'release'
         working-directory: tests/gui
@@ -201,7 +204,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm pack ./build/npm/stage --pack-destination build/npm --ignore-scripts
       - name: Verify offline global install and uninstall
-        run: python tests/npm_package_tests.py --archive build/npm/som1ng-rondo-0.1.0-dev.8.tgz
+        run: python tests/npm_package_tests.py --archive build/npm/som1ng-rondo-0.1.0-dev.9.tgz
       - name: Upload Rondo npm archive
         uses: actions/upload-artifact@v4
         with:

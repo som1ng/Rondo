@@ -24,7 +24,16 @@ async function file(candidate, warnings) {
 
 function npmExecutables(agent, arch) {
   if (agent === 'claude') return ['node_modules/@anthropic-ai/claude-code/bin/claude.exe'];
-  if (agent === 'opencode') return ['node_modules/opencode-ai/bin/opencode.exe'];
+  if (agent === 'opencode') {
+    const platforms = arch === 'x64' ? ['x64-baseline', 'x64'] : arch === 'arm64' ? ['arm64'] : [];
+    return [
+      ...platforms.flatMap(platform => [
+        `node_modules/@opencode/cli/node_modules/@opencode/cli-windows-${platform}/bin/opencode.exe`,
+        `node_modules/@opencode/cli-windows-${platform}/bin/opencode.exe`,
+      ]),
+      'node_modules/opencode-ai/bin/opencode.exe',
+    ];
+  }
   if (!['x64', 'arm64'].includes(arch)) return [];
   const target = arch === 'x64' ? 'x86_64-pc-windows-msvc' : 'aarch64-pc-windows-msvc';
   const binary = `vendor/${target}/bin/codex.exe`;

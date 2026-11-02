@@ -3,6 +3,9 @@
 核验日期：2026-10-25。服务：`integrations/mcp`，版本 `0.1.0-dev.1`；
 原生 CLI：`2.0.0-dev.9` / Schema `1.6`。
 
+2026-11-03 补充：OpenCode **2.2.5 (V2)** 的 npm 安装、项目自动发现、四项工具调用和卸载
+见 [V2 验收记录](OPENCODE_V2_ACCEPTANCE.md)。以下表格及 `mcp_hosts.py` 命令保留 2026-10-25 的 V1 基线。
+
 ## 本机验证结果
 
 | 宿主 | 实测版本 | 真实宿主路径 | 结果 |
@@ -76,7 +79,25 @@ Claude Code 的 MCP JSON：
 }
 ```
 
-OpenCode **1.19.4 / V1** 的配置段（不要直接当作 V2 配置）：
+OpenCode **2.2.5 / V2** 新配置：
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "dll_doctor": {
+        "type": "local",
+        "command": ["C:\\Program Files\\nodejs\\node.exe", "D:\\src\\Rondo\\integrations\\mcp\\dist\\index.js", "--cli", "D:\\src\\Rondo\\build\\msvc-x64\\Release\\cli\\rondo.exe", "--allow-root", "D:\\samples"],
+        "disabled": false,
+        "codemode": false
+      }
+    }
+  }
+}
+```
+
+OpenCode **1.19.4 / V1** 的存量配置段；V2 可兼容读取，安装器升级时保留此布局：
 
 ```json
 {
@@ -106,7 +127,7 @@ OpenCode **1.19.4 / V1** 的配置段（不要直接当作 V2 配置）：
 回归中发现 OpenCode 会等待管道 stdin 结束：早期完整用例超时，测试启动器显式关闭 argv 提示模式的 stdin 后通过。
 此修正仅涉及测试启动方式，没有修改 MCP 服务来绕过宿主问题。
 
-仍未覆盖：真实模型自主行为评测、其他客户端版本、OpenCode V2、Inspector 图形界面手动验收、
+2026-10-25 这轮未覆盖：真实模型自主行为评测、其他客户端版本、OpenCode V2、Inspector 图形界面手动验收、
 全系统断网验收、自动安装器与 npm 发布。因此本轮不把全部 P3/P4 条目统称为完成。
 
 接口依据：[Codex app-server](https://learn.chatgpt.com/docs/app-server)、

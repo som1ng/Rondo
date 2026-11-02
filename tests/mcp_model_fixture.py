@@ -78,8 +78,9 @@ def verify_result(actual, case):
 
 class ModelFixture:
     """Request one known tool at a time, and accept only verified host tool results."""
-    def __init__(self, style, cases):
+    def __init__(self, style, cases, *, tools_present=True):
         self.style, self.cases = style, cases
+        self.tools_present = tools_present
         self.results = {}
         self.issued = set()
         self.requests = 0
@@ -130,6 +131,13 @@ class ModelFixture:
         self.server.server_close()
         self.thread.join(timeout=5)
 
+    def verify_tools(self, tools):
+        prefix = 'mcp__dll_doctor__' if self.style == 'claude' else 'dll_doctor_'
+        if self.tools_present:
+            verify_catalog(tools, prefix, model_wire=True)
+        elif tools not in (None, []):
+            raise HostCheckError('tools appeared without an installed project configuration')
+
     def respond(self, path, body):
         expected_path = '/v1/messages' if self.style == 'claude' else '/v1/chat/completions'
         if path != expected_path or not isinstance(body, dict) or body.get('stream') is not True:
@@ -138,7 +146,7 @@ class ModelFixture:
         if self.requests > len(self.cases) + 3:
             raise HostCheckError('host exceeded the fixed model request budget')
         prefix = 'mcp__dll_doctor__' if self.style == 'claude' else 'dll_doctor_'
-        verify_catalog(body.get('tools'), prefix, model_wire=True)
+        self.verify_tools(body.get('tools'))
         self.catalog_verified = True
         for message in body.get('messages', []):
             if message.get('role') == 'tool':

@@ -21,7 +21,7 @@ async function unchanged(snapshot) { for (const [file, bytes] of snapshot) asser
 const envelope = bytes => JSON.parse(bytes.toString('utf8').split('\n')[0]);
 const serialized = (data, marker = '') => JSON.stringify({ payload: data.payload, sha256: hash(JSON.stringify(data.payload)) }) + '\n' + marker;
 
-async function fixture(t, agent = 'codex', scope = 'project', customCodex = false) {
+async function fixture(t, agent = 'codex', scope = 'project', customCodex = false, clientVersion = '1.19.4') {
   const base = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'rondo-mcp-recovery-')));
   const root = path.join(base, '用户 project 🚀'); await fs.mkdir(root);
   const custom = path.join(base, 'custom config'); if (customCodex) await fs.mkdir(custom);
@@ -36,7 +36,7 @@ async function fixture(t, agent = 'codex', scope = 'project', customCodex = fals
   const options = { ...query, cli, server, client, allowRoot: [root] };
   const context = { home: root, env: customCodex ? { CODEX_HOME: custom } : {},
     probeCli: async file => ({ path: file, tool_version: '2.0.0-dev.9', schema_version: '1.6', sha256: hash(await fs.readFile(file)) }),
-    probeClient: async (name, file) => ({ path: file, version: { codex: '0.164.0', claude: '2.1.310', opencode: '1.19.4' }[name] }),
+    probeClient: async (name, file) => ({ path: file, version: { codex: '0.164.0', claude: '2.1.310', opencode: clientVersion }[name] }),
     checkServer: async () => {},
   };
   const installed = await installMcp('setup', options, context), paths = [installed.config, installed.receipt];
@@ -49,7 +49,7 @@ async function fixture(t, agent = 'codex', scope = 'project', customCodex = fals
     await fs.rm(base, { recursive: true, maxRetries: 20, retryDelay: 50 });
   });
   const start = async (command, pause, extra = {}) => {
-    const child = spawn(process.execPath, [childFile, JSON.stringify({ command, pause, home: root, env: context.env,
+    const child = spawn(process.execPath, [childFile, JSON.stringify({ command, pause, home: root, env: context.env, clientVersion,
       options: command === 'upgrade' ? next : query, ...extra })], { windowsHide: true, stdio: ['ignore', 'ignore', 'ignore', 'ipc'] });
     let ended = false, timer;
     const closed = new Promise(resolve => child.once('close', () => { ended = true; resolve(); }));
@@ -109,6 +109,29 @@ for (const phase of ['prepared', 'temporary-written', 'receipt-written', 'commit
     else await unchanged(f.before);
   });
 }
+
+for (const scope of ['project', 'user']) {
+  test(`OpenCode V2/${scope}: interrupted nested entry upgrade recovers exact original bytes`, async t => {
+    const f = await fixture(t, 'opencode', scope, false, '2.2.5');
+    const record = JSON.parse(await fs.readFile(f.installed.receipt));
+    assert.equal(record.entry.codemode, false);
+    const child = await f.start('upgrade', 'receipt-written'); await child.stop();
+    assert.ok(!(await fs.readFile(f.lock, 'utf8')).includes(privateFixture));
+    assert.equal((await installMcp('recover', f.query, f.context)).action, 'restored');
+    await unchanged(f.before);
+    assert.equal((await installMcp('upgrade', f.next, f.context)).action, 'upgraded');
+    await installMcp('verify', f.query, f.context);
+  });
+}
+
+test('interrupted V1 to V2 receipt-only upgrade can restore its V1 ownership record', async t => {
+  const f = await fixture(t, 'opencode');
+  const child = await f.start('upgrade', 'receipt-written', { options: f.options, clientVersion: '2.2.5' });
+  await child.stop();
+  assert.equal(JSON.parse(await fs.readFile(f.installed.receipt)).runtime.client.version, '2.2.5');
+  assert.equal((await installMcp('recover', f.query, f.context)).action, 'restored');
+  await unchanged(f.before);
+});
 
 test('MCP partial temporary content and a same-inode journal alias can be recovered', async t => {
   const f = await fixture(t), child = await f.start('upgrade', 'temporary-written'); await child.stop();

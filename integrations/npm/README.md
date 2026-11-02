@@ -4,7 +4,7 @@
 以下是本地构建/CI 归档的可验证安装入口：
 
 ```powershell
-npm install -g .\som1ng-rondo-0.1.0-dev.8.tgz
+npm install -g .\som1ng-rondo-0.1.0-dev.9.tgz
 rondo self-check
 rondo --version --json
 rondo doctor 'D:\samples\example.dll' --json
@@ -63,6 +63,17 @@ rondo mcp --allow-root 'D:\samples'
 
 用户级 MCP 的配置位置、自定义目录支持范围和收据规则见
 [安装器说明](https://github.com/som1ng/Rondo/blob/main/integrations/installer/README.md#用户级-mcp-配置)。`--scope user` 不能传 `--project`，也不会扩大授权目录。
+
+从 npm 包 `0.1.0-dev.9` 起支持 OpenCode **2.2.5**，同时支持 **1.19.4**。
+`list-agents` 可定位 `@opencode/cli` 的 Windows 原生平台包；指定客户端时使用其 `.exe` 路径：
+
+```powershell
+rondo setup --integration mcp --agent opencode --scope project --client 'D:\tools\opencode.exe' --allow-root 'D:\samples' --verify
+```
+
+V2 新安装采用 `mcp.servers.dll_doctor`，关闭该服务的 Code Mode，让七个工具直接可用。
+V1 存量安装在升级客户端后执行相同参数的 `rondo upgrade`，更新绑定并保留 V2 可兼容读取的旧布局。
+配置规则、冷启动连接等待和端到端实测见 [OpenCode V2 验收](https://github.com/som1ng/Rondo/blob/main/docs/OPENCODE_V2_ACCEPTANCE.md)。
 
 npm 负责全局目录、命令 shim、包版本和运行文件的移除，不另复制一份用户运行库。
 卸载 npm 包前，先对需要移除的各项目/用户 Agent 配置执行对应 `rondo uninstall`，再运行：
@@ -133,7 +144,7 @@ rondo recover --integration mcp --agent all --scope user
 python integrations/npm/scripts/package_npm.py --x64 build/msvc-x64/Release/cli/rondo.exe --x86 build/msvc-x86/Release/cli/rondo.exe --output build/npm/stage
 npm ci --prefix build/npm/stage --ignore-scripts --no-audit --no-fund
 npm pack ./build/npm/stage --pack-destination build/npm --ignore-scripts
-python tests/npm_package_tests.py --archive build/npm/som1ng-rondo-0.1.0-dev.8.tgz
+python tests/npm_package_tests.py --archive build/npm/som1ng-rondo-0.1.0-dev.9.tgz
 ```
 
 CI 提供实际 checkout SHA 给 `--revision`；本地复用构建时省略，避免伪造来源。

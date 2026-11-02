@@ -48,3 +48,25 @@ Sources: [Codex MCP](https://learn.chatgpt.com/docs/extend/mcp),
 [Claude MCP](https://code.claude.com/docs/en/mcp),
 [OpenCode MCP](https://opencode.ai/docs/mcp-servers/),
 [OpenCode config](https://opencode.ai/docs/config/).
+
+## OpenCode V2 amendment — 2026-11-03
+
+Installer `0.1.0-dev.14` adds OpenCode `2.2.5` alongside `1.19.4`, for both
+project and user configuration. Acceptance details: [OpenCode V2](OPENCODE_V2_ACCEPTANCE.md).
+
+- New V2 installations use `mcp.servers.dll_doctor` with `disabled: false` and
+  `codemode: false`; V1 keeps `mcp.dll_doctor` with `enabled: true`.
+- Upgrade an owned V1 installation in place after changing clients. V2 accepts
+  the legacy layout, so the recovery journal can keep replacing only the managed
+  entry. A native V2 entry cannot be downgraded to a V1 client.
+- Check ownership across both layouts. Duplicate names, moved managed entries,
+  changed values, and a legacy server named `servers` block writes.
+- A fresh dry-run returns `managed_entries_by_client_version`, because it does
+  not execute the client to discover its version. Existing receipts select one layout.
+- The real V2 acceptance uses project discovery and a private loopback server,
+  waits for MCP `connected`, then verifies the seven-tool catalog and four returned
+  results through a deterministic local model fixture.
+
+Sources: [V2 MCP](https://opencode.ai/v2/docs/mcp-servers/),
+[V2 config](https://opencode.ai/v2/docs/config/),
+[V1 migration](https://opencode.ai/v2/docs/migrate-v1/).
