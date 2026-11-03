@@ -247,6 +247,7 @@ cmake/                 固定构建依赖与 Schema 嵌入配置
 ## 后续路线
 
 当前阶段状态和验证缺口见 [路线图状态](docs/ROADMAP_STATUS.md)；各交付记录中的“下一步”是当时快照。
+Codex 已完成限定的[项目发现与 PE 问答](docs/CODEX_ACCEPTANCE.md)、[架构冲突/126 诊断](docs/CODEX_DIAGNOSTIC_ACCEPTANCE.md)验收。
 
 1. 扩展客户端、用户级自动发现和完整 Skill 场景评测。
 2. 补充全新 Windows、缺运行库、完整离线系统及物理断电验收。

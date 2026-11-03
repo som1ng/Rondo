@@ -54,6 +54,7 @@ MCP 安装器当前适配 Codex `0.164.0`、Claude Code `2.1.310`、OpenCode `1.
 - GUI 界面回归 17 项通过；两种架构均完成真实 WebView2 启动、进程刷新、中文 DLL 路径诊断、双主题和关闭验证。
 - GUI 原生归档测试两种架构各 4 项通过，CLI 原生归档测试各 6 项通过。
 - MCP 7 项、npm 入口 28 项、Pi 本地包 3 项通过。
+- 合并最新主线后，安装器 246 项通过、0 跳过；Codex/MCP/OpenCode 宿主证据检查 45 项通过。
 - 完整 npm 归档的结构与离线安装测试通过，包含自检、原生 CLI、Skill/MCP、升级中断恢复与卸载；
   额外使用 Codex `0.164.0`、Claude Code `2.1.310`、OpenCode `2.2.5` 验证配置生命周期。
 - `npm publish --dry-run` 成功。发布产物由合入后的 Windows CI 构建。
