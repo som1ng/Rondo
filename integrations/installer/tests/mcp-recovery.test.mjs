@@ -61,16 +61,19 @@ async function fixture(t, agent = 'codex', scope = 'project', customCodex = fals
         child.once('message', message => message.ready ? resolve() : reject(Object.assign(new Error('Fixture failed'), { code: message.error })));
       }), closed.then(() => { throw new Error('Fixture exited before checkpoint'); }),
       new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Fixture timed out')), 20000); })]);
-    } finally { clearTimeout(timer); }
-    return { stop };
+    } catch (error) { await stop(); throw error; }
+    finally { clearTimeout(timer); }
+    return { stop, pid: child.pid };
   };
   return { base, root, cli, server, nextCli, nextServer, installed, paths, before, lock, options, next, query, context, start };
 }
-async function retry(operation) {
+async function retryAfterOwnerExit(operation) {
+  // Used only after stop() has awaited the upgrader's close. A reused PID can
+  // still look active; the runtime preserves its lock until a later attempt.
   for (let attempt = 0; ; attempt++) {
     try { return await operation(); }
     catch (error) {
-      if (error.code !== 'RECOVERY_BUSY' || attempt >= 20) throw error;
+      if (!['RECOVERY_BUSY', 'RECOVERY_ACTIVE'].includes(error.code) || attempt >= 20) throw error;
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
@@ -158,8 +161,29 @@ test('MCP live owner is preserved and recovery can be killed twice then retried'
   await assert.rejects(installMcp('recover', f.query, f.context), { code: 'RECOVERY_ACTIVE' }); await child.stop();
   const first = await f.start('recover', 'guard-held');
   await assert.rejects(installMcp('recover', f.query, f.context), { code: 'RECOVERY_BUSY' }); await first.stop();
-  const second = await retry(() => f.start('recover', 'restored-file')); await second.stop();
-  assert.equal((await retry(() => installMcp('recover', f.query, f.context))).action, 'restored'); await unchanged(f.before);
+  const second = await retryAfterOwnerExit(() => f.start('recover', 'restored-file')); await second.stop();
+  assert.equal((await retryAfterOwnerExit(() => installMcp('recover', f.query, f.context))).action, 'restored'); await unchanged(f.before);
+});
+
+test('post-exit MCP retry preserves files when the owner PID becomes occupied between checks', async t => {
+  const f = await fixture(t), child = await f.start('upgrade', 'receipt-written');
+  await child.stop();
+  const partial = await files([...f.paths, f.lock]), originalKill = process.kill;
+  let probes = 0;
+  const probe = t.mock.method(process, 'kill', (pid, signal) => {
+    if (pid !== child.pid || signal !== 0) return originalKill.call(process, pid, signal);
+    if (++probes === 2) return true;
+    throw Object.assign(new Error('owner exited'), { code: 'ESRCH' });
+  });
+  try {
+    const recovered = await retryAfterOwnerExit(async () => {
+      try { return await installMcp('recover', f.query, f.context); }
+      catch (error) {
+        assert.equal(error.code, 'RECOVERY_ACTIVE'); await unchanged(partial); throw error;
+      }
+    });
+    assert.equal(recovered.action, 'restored'); assert.ok(probes >= 4); await unchanged(f.before);
+  } finally { probe.mock.restore(); }
 });
 
 for (const agent of ['codex', 'claude', 'opencode']) {
