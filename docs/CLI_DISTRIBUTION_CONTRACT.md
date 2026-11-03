@@ -1,23 +1,23 @@
 # CLI distribution contract
 
-Date: 2026-10-25. P4 distribution groundwork: CI download artifacts with integrity
-metadata and an optional pre-execution manifest check in the local Skill installer.
-This does not publish a GitHub Release, resolve project licensing, sign binaries,
-download executables or configure MCP clients.
+Updated for 2.0.0 on 2026-11-03. CLI release archives carry integrity metadata,
+the MIT license and third-party notices. The local installer can check the manifest
+before execution. The complete npm distribution also bundles MCP and Skill resources.
 
 ## Bundle
 
 - Build each archive from the explicitly selected, trusted Release CLI. Read its
   PE machine/optional-header magic and run its bounded version query; the queried
   binary must not change while packaging. Require the requested x86/x64 architecture.
-- ZIP contains exactly `dllinjector.exe`, `manifest.json`, `README.txt` and
-  `THIRD_PARTY_NOTICES.md`. No GUI, demos, reports, credentials or build directories.
-- Manifest format 1: product `dll-doctor-cli`, platform `windows`, architecture
+- ZIP contains exactly `rondo.exe`, `manifest.json`, `README.txt`, `LICENSE` and
+  `THIRD_PARTY_NOTICES.md`.
+- Manifest format 1: product `rondo-cli`, platform `windows`, architecture
   `x86`/`x64`, tool/schema versions, source revision (40 hex or null), runtime
-  `msvc-v14`, and one `files.dllinjector.exe` entry with size and SHA-256.
+  `msvc-v14`, and one `files.rondo.exe` entry with size and SHA-256.
+  The installer also accepts the legacy `dll-doctor-cli` / `dllinjector.exe` pair.
 - Omit inferred build provenance: CI supplies the checkout SHA explicitly; a
   locally reused binary has null source revision unless its builder supplies one.
-- Archive is named `dll-doctor-cli-<version>-windows-<arch>.zip`. Its sibling
+- Archive is named `rondo-cli-<version>-windows-<arch>.zip`. Its sibling
   `.zip.sha256` contains lowercase SHA-256, two spaces and the archive basename.
   Refuse existing output files. Clean up outputs created by a caught packaging failure.
 - CI uploads bundles for both Release architectures as review/download artifacts.

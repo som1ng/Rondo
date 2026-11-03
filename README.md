@@ -2,19 +2,19 @@
   <img src="assets/logo.png" alt="Rondo Logo" width="180" />
 </p>
 
-# Rondo (二次开发中)
+# Rondo 2.0
 
-> **Rondo** 是一个基于现代 C++ 的 Windows 系统编程、DLL 加载诊断与逆向工程分析平台，提供全功能 CLI、现代 GUI (WebView2 原生内嵌界面)、Agent Skills 与 MCP 协议支持。
+> Windows DLL / PE 诊断工具，提供原生 CLI、WebView2 GUI、Agent Skill 和 MCP 接入。
 
-Windows C++ DLL 实验项目，正在向 **DLL / PE 诊断、只读进程分析与 Agent 本地工具**演进。
+从 DLL 实验项目发展而来，当前主要提供 **DLL / PE 诊断、只读进程分析与 Agent 本地工具**。
 
-已具备 **只读进程/模块查询、PE 解析、DLL Doctor 静态规则与依赖候选检查、JSON / Markdown / HTML 报告及离线转换和 Windows 回归测试**，现有 Win32 GUI 保留。CLI 当前版本为 `2.0.0-dev.9`，尚未发布正式 V2.0；已提供只读诊断 Agent Skill 和 [本地 stdio MCP 服务](integrations/mcp/README.md)，一行安装器继续按路线推进。参见 [CLI 基础契约](docs/P1_CONTRACT.md)、[模块契约](docs/MODULES_CONTRACT.md)、[PE 头部契约](docs/PE_CONTRACT.md)、[PE 表解析契约](docs/PE_TABLES_CONTRACT.md)、[Doctor 契约](docs/DOCTOR_CONTRACT.md)、[依赖候选契约](docs/DEPENDENCIES_CONTRACT.md)、[直接报告](docs/REPORTS_CONTRACT.md)、[离线转换](docs/SAVED_REPORTS_CONTRACT.md)、[Skill 接入与兼容性](docs/AGENT_COMPATIBILITY.md) 和 [原始基线](docs/BASELINE.md)。
+GUI、CLI 与 npm 包的正式版本为 **`2.0.0`**。支持 **进程/模块查询、PE 解析、DLL Doctor、显式目录依赖候选检查、JSON / Markdown / HTML 报告及离线转换**，并附带 Agent Skill、[本地 stdio MCP 服务](integrations/mcp/README.md)和安装器。下载与版本说明见 [v2.0.0 Release](https://github.com/som1ng/Rondo/releases/tag/v2.0.0)。接口细节见 [CLI](docs/P1_CONTRACT.md)、[模块](docs/MODULES_CONTRACT.md)、[PE](docs/PE_TABLES_CONTRACT.md)、[Doctor](docs/DOCTOR_CONTRACT.md)、[依赖候选](docs/DEPENDENCIES_CONTRACT.md)、[报告](docs/REPORTS_CONTRACT.md)和[离线转换](docs/SAVED_REPORTS_CONTRACT.md)。
 
 ## 当前能力与验证边界
 
 | 项目 | 状态 |
 | --- | --- |
-| Win32 GUI、进程列表、文件选择 | 可从源码构建；具备隐藏窗口启动/关闭测试 |
+| WebView2 GUI、进程列表、文件选择 | x64/x86 下载归档；具备界面回归和隐藏窗口启动/关闭测试 |
 | 架构查询 | x86/x64/ARM64/Unknown 明确区分；查询失败携带错误与阶段；GUI 当前仅接受匹配的 x86/x64 目标 |
 | 原有远程线程、APC、消息钩子、反射式与 DLL 部署方法 | 保留源代码和 GUI 入口；本轮仅验证构建，没有验证这些方法的运行效果 |
 | Direct Syscall | GNU x64 实验源码保留；未纳入当前 CMake 构建；GUI 标注不可用 |
@@ -27,9 +27,20 @@ Windows C++ DLL 实验项目，正在向 **DLL / PE 诊断、只读进程分析�
 | 依赖候选检查 | Doctor 的 `--search-dir <path>` 可重复指定最多 16 个目录；报告普通/延迟导入的候选与观察错误；仅检查文件属性，不模拟加载器 |
 | 可分享报告 | 诊断命令支持 `--format markdown` / `--format html`，展示证据、发现与完整 JSON 附录；HTML 单文件离线阅读 |
 | 已保存报告转换 | `report export <saved.json> --format markdown|html` 按源版本校验并保留原报告，不重新查询其中的目标 |
-| Agent 集成 | 单一权威 Windows DLL Doctor Skill；命令示例已回归验证，客户端自动触发尚未实测；7 个只读 MCP 工具；原生 Pi 本地包；Codex/Claude/OpenCode 本地 Skill 与项目 MCP 安装器 |
+| Agent 集成 | 单一权威 Windows DLL Doctor Skill；命令示例已回归验证，客户端自动触发尚未实测；7 个只读 MCP 工具；原生 Pi 本地包；Codex/Claude/OpenCode 项目与用户级 Skill/MCP 安装器 |
 
 GUI 启动不再自动申请 Debug Privilege。现有方法返回的 `true` 只用于显示“请求已提交，预期效果尚未验证”，不能证明 DLL 已完成初始化。旧反射式及部署代码的 PE 边界检查等已知问题记录在基线报告中，不能直接作为未来 Doctor 解析器使用。
+
+## GUI 下载
+
+从 [v2.0.0 Release](https://github.com/som1ng/Rondo/releases/tag/v2.0.0) 下载：
+
+- [Windows x64 GUI](https://github.com/som1ng/Rondo/releases/download/v2.0.0/rondo-gui-2.0.0-windows-x64.zip)
+- [Windows x86 GUI](https://github.com/som1ng/Rondo/releases/download/v2.0.0/rondo-gui-2.0.0-windows-x86.zip)
+
+解压后运行 `Rondo.exe`。GUI 需要 [Microsoft Edge WebView2 Evergreen](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)
+和匹配架构的 [VC++ v14 运行库](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)，无需 Node.js。
+归档附带许可证、第三方声明和校验清单；可用 `Get-FileHash -Algorithm SHA256 <zip>` 对照 `.sha256` 文件。
 
 ## 构建与测试
 
@@ -37,8 +48,8 @@ GUI 启动不再自动申请 Debug Privilege。现有方法返回的 `true` 只�
 测试还需要 Python 3.9+、`jsonschema` 和 `markdown-it-py`（由下方 requirements 安装）。首次 CMake 配置会下载并校验固定版本的 jsoncons，放在 build 缓存中；CLI 运行时不依赖 Python，也不下载依赖。
 
 ```powershell
-git clone https://github.com/som1ng/DLLInjector.git
-cd DLLInjector
+git clone https://github.com/som1ng/Rondo.git
+cd Rondo
 python -m pip install -r tests/requirements.txt
 cmake --preset msvc-x64
 cmake --build --preset msvc-x64-debug --parallel
@@ -55,18 +66,17 @@ Schema 在构建时嵌入二进制，部署 CLI 无需旁置 Schema 或依赖源
 
 ## npm 全局安装
 
-已提供名为 `@som1ng/rondo` 的 npm 归档，安装后命令为 `rondo`。当前尚未公开发布到 npm；
-从成功 CI 的 `rondo-npm` 产物取得 `.tgz` 后，可本地全局安装：
+公开包名为 **`@s0m1ng/rondo`**（`s0m1ng` 中间是数字 `0`），安装后的命令为 `rondo`：
 
 ```powershell
-npm install -g .\som1ng-rondo-0.1.0-dev.9.tgz
+npm install -g @s0m1ng/rondo
 rondo self-check
 rondo --version --json
 rondo setup --agent auto --scope project --verify
 ```
 
-公开发布后的目标下载命令为 `npm install -g @som1ng/rondo`，目前不要把它当成已发布入口。
-包内含 x64/x86 CLI、MCP、Skill 和 Node 依赖；安装时不需要另行构建 CLI 或 MCP。
+也可从 Release 下载 `s0m1ng-rondo-2.0.0.tgz` 后执行 `npm install -g .\s0m1ng-rondo-2.0.0.tgz`。
+包内含 x64/x86 CLI、MCP、Skill、安装器和 Node 依赖；安装时不需要另行构建 CLI 或 MCP。
 需要 Windows x86/x64、Node.js 22.19+ 和 VC++ v14 运行库。详见 [npm 包说明](integrations/npm/README.md)。
 `rondo self-check --json` 提供本机安装诊断；不会修改 Agent 配置，也不代表客户端发现或模型行为验收。
 OpenCode `2.2.5` 的项目 MCP 安装、自动发现和工具调用见 [V2 验收记录](docs/OPENCODE_V2_ACCEPTANCE.md)。
@@ -163,7 +173,7 @@ Codex/OpenCode 的项目发现已经实测，Claude 与用户级发现尚未实�
 见 [批量项目 MCP 配置](integrations/installer/README.md#批量项目-mcp-配置)。
 源码入口仍支持手动指定运行文件；完整 Rondo npm 归档已可全局安装。
 MCP 已支持 `--scope user`，单客户端、auto 和 all 均可使用；配置位置与验证边界见
-[用户级 MCP](integrations/installer/README.md#用户级-mcp-配置)。公开 registry 安装仍待发布。
+[用户级 MCP](integrations/installer/README.md#用户级-mcp-配置)。完整包通过 `npm install -g @s0m1ng/rondo` 安装。
 更新 npm 包后可用 `rondo upgrade` 原地更新已有 Skill/MCP 配置，支持项目和用户范围，
 捕获失败时恢复旧配置和收据；用法及限制见 [配置升级](docs/CONFIG_UPGRADE_DELIVERY.md)。
 `upgrade --agent all` 还可批量升级已有安装，失败时恢复本批改动，见 [批量升级](docs/BATCH_UPGRADE_DELIVERY.md)。
@@ -171,7 +181,7 @@ MCP 已支持 `--scope user`，单客户端、auto 和 all 均可使用；配置
 MCP 升级可使用 `rondo recover --integration mcp`；记录只保存受管条目和收据，不备份整份客户端配置，见 [MCP 中断恢复](docs/MCP_RECOVERY_DELIVERY.md)。
 新版 `upgrade --agent all` 还可用 `recover --agent all` 恢复整个批次；未整批提交时回滚参与目标，已提交时保留结果，见 [整批中断恢复](docs/BATCH_RECOVERY_DELIVERY.md)。
 
-需要独立 CLI 时，可下载成功 Windows CI 的 `rondo-cli-msvc-x64` / `rondo-cli-msvc-x86` 产物。
+需要独立 CLI 时，可从 [v2.0.0 Release](https://github.com/som1ng/Rondo/releases/tag/v2.0.0) 下载 `rondo-cli-2.0.0-windows-x64.zip` / `rondo-cli-2.0.0-windows-x86.zip`。
 归档附带 SHA-256 与版本/架构清单，安装器支持 `--manifest` 在启动 CLI 前核对文件。
 获取、运行库要求和验证边界见 [CLI 下载归档与校验](docs/CLI_DISTRIBUTION.md)。
 
@@ -236,19 +246,23 @@ cmake/                 固定构建依赖与 Schema 嵌入配置
 
 ## 后续路线
 
-原计划尚未全部完成。当前阶段状态、暂缓项和验证缺口见 [路线图状态](docs/ROADMAP_STATUS.md)；各交付记录中的“下一步”是当时快照。
+当前阶段状态和验证缺口见 [路线图状态](docs/ROADMAP_STATUS.md)；各交付记录中的“下一步”是当时快照。
 
-1. P4：Rondo npm 归档已包含 CLI/MCP/Skill，由 npm 管理全局文件与命令；补齐来源/许可和公开发布，才能通过 registry 包名下载安装。
-2. P4：用户级 MCP、配置升级和 Skill/MCP 单目标及整批升级进程中断恢复已实现；继续物理断电与新机器验收。本地归档离线安装不等于全新离线系统验收。
-3. P2/P3 与发布收尾：[Codex 项目发现和单个真实模型场景](docs/CODEX_ACCEPTANCE.md) 已验收；继续其他客户端、用户级发现、完整场景评测、GUI 遗留及发布文档。
+1. 扩展客户端、用户级自动发现和完整 Skill 场景评测。
+2. 补充全新 Windows、缺运行库、完整离线系统及物理断电验收。
+3. 处理 GUI 同步执行、多显示器 DPI 等遗留项。
 4. P5：自有测试程序的 DLL 生命周期实验与结果对比，尚未开发。
 
 旧 README 中的 `-t`、`-m`、`-d`、`-s` 参数没有实现，已移除。未来命令在实现并通过测试前不会作为可用功能展示。
 
 ## English quick start
 
-This Windows C++ project includes the legacy GUI and a read-only process/PE CLI
-(`2.0.0-dev.9`). Install Visual Studio 2022 C++ tools and CMake 3.21+, plus Python
+Rondo 2.0.0 provides a WebView2 GUI and a process/PE diagnostic CLI. Download the
+GUI from [Releases](https://github.com/som1ng/Rondo/releases/tag/v2.0.0), or install
+the CLI with `npm install -g @s0m1ng/rondo`, then run `rondo self-check`.
+The npm package requires Windows x86/x64, Node.js 22.19+ and the VC++ v14 runtime;
+the GUI additionally requires WebView2 and does not need Node.js.
+To build from source, install Visual Studio 2022 C++ tools and CMake 3.21+, plus Python
 3.9+ and `python -m pip install -r tests/requirements.txt` for tests. Build with the
 presets above, then run `build/msvc-x64/Debug/cli/rondo.exe process list --json`
 or `process inspect --pid <PID> --json` / `process modules --pid <PID> --json`.
@@ -280,12 +294,14 @@ and OpenCode Skill setup and project MCP configuration with explicit paths, prev
 `list-agents` inspects local candidates without running them; `setup --agent auto` requires an interactive
 choice or explicit `--select`, with a native path to resolve ambiguous matches.
 Generated MCP settings have been checked with installed clients using isolated fixtures; see the
-[validation boundaries](docs/MCP_INSTALLER_DELIVERY.md). Automatic CLI downloads, user-level MCP and
-broader host verification remain in progress. CTest uses read-only queries,
+[validation boundaries](docs/MCP_INSTALLER_DELIVERY.md). The npm package bundles both CLI architectures,
+MCP and Skill resources; project/user setup, upgrades and interrupted-upgrade recovery are available.
+Broader client and fresh-machine validation remains in progress. CTest uses read-only queries,
 hidden startup checks, mocks and self-owned fixtures.
 
 ## 来源与许可
 
-仓库目前没有项目级 `LICENSE` 文件，因此不再使用 MIT 徽章或声明整个仓库采用 MIT。第三方 ReflectiveLoader 文件中的原始版权与许可头完整保留，见 [第三方声明](docs/THIRD_PARTY_NOTICES.md)。其他代码的来源核实及项目级许可是后续发布前的待办。
+项目自有代码采用 [MIT](LICENSE)，由维护者于 2026-11-03 确认。第三方代码和依赖保留各自许可，
+包括 ReflectiveLoader 的原始版权与许可头；详见 [第三方声明](docs/THIRD_PARTY_NOTICES.md)。
 
 问题与建议可通过 [GitHub Issues](https://github.com/som1ng/Rondo/issues) 反馈。

@@ -33,7 +33,7 @@ export async function verifyDistribution(cli, manifestPath) {
   const filename = manifest?.product === 'rondo-cli' ? 'rondo.exe' : 'dllinjector.exe';
   if (!manifest || manifest.format !== 1 || !['rondo-cli', 'dll-doctor-cli'].includes(manifest.product) || manifest.platform !== 'windows'
       || !['x86', 'x64'].includes(manifest.architecture) || manifest.runtime !== 'msvc-v14'
-      || !['2.0.0-dev.8', '2.0.0-dev.9'].includes(manifest.tool_version) || manifest.schema_version !== '1.6'
+      || !['2.0.0-dev.8', '2.0.0-dev.9', '2.0.0'].includes(manifest.tool_version) || manifest.schema_version !== '1.6'
       || !(manifest.source_revision === null || (typeof manifest.source_revision === 'string' && /^[0-9a-f]{40}$/.test(manifest.source_revision)))
       || !manifest.files || Object.keys(manifest.files).join() !== filename) invalid('Manifest contract is invalid or unsupported.');
   const file = manifest.files[filename];

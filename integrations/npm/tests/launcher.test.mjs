@@ -72,7 +72,7 @@ test('native arguments remain literal and corrupted binaries fail before launch'
   await fs.writeFile(cli, bytes);
   await fs.writeFile(path.join(directory, 'manifest.json'), JSON.stringify({ format: 1, product: 'rondo-cli',
     platform: 'windows', architecture: 'x64', runtime: 'msvc-v14', source_revision: null,
-    tool_version: '2.0.0-dev.9', schema_version: '1.6',
+    tool_version: '2.0.0', schema_version: '1.6',
     files: { 'rondo.exe': { size: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') } } }));
   const args = ['doctor', 'C:\中文 space\a&$b.dll', '--json'];
   assert.deepEqual(await command(args, { ...context, root }), { file: cli, args });

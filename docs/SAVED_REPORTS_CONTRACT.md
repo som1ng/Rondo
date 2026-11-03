@@ -1,11 +1,11 @@
 # 已保存 JSON 报告离线转换
 
-目标：CLI `2.0.0-dev.9` / Schema `1.6`（dev.9 增加校验后的 JSON 导出）。
+当前目标：CLI `2.0.0` / Schema `1.6`（dev.9 起支持校验后的 JSON 导出）。
 
 ```powershell
-dllinjector report export .\reports\doctor.json --format html --output .\reports\doctor.html
-dllinjector report export .\reports\doctor.json --format markdown
-dllinjector report export .\reports\doctor.json --json
+rondo report export .\reports\doctor.json --format html --output .\reports\doctor.html
+rondo report export .\reports\doctor.json --format markdown
+rondo report export .\reports\doctor.json --json
 ```
 
 - 必须提供一个输入文件和显式 `--format markdown|html` 或 `--json`；两种格式不能同时指定。

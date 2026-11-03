@@ -1,11 +1,11 @@
 # Rondo CLI 下载归档与校验
 
-Windows CI 的 Release 作业提供 `rondo-cli-msvc-x64` 和 `rondo-cli-msvc-x86` 下载产物。
-选择与你的诊断任务匹配的架构，并确认整个工作流成功。它们是 CI 产物，尚非正式 GitHub Release，
-没有数字签名；项目级许可仍待确定。源码库不提交生成的 EXE、ZIP 或本机安装记录。
+从 [v2.0.0 Release](https://github.com/som1ng/Rondo/releases/tag/v2.0.0) 下载 Windows x64/x86 独立 CLI。
+Windows CI 也提供 `rondo-cli-msvc-x64` 和 `rondo-cli-msvc-x86` 产物。
+项目自有代码采用 MIT，归档未做数字签名。源码库不提交生成的 EXE、ZIP 或本机安装记录。
 
 每个产物包含 `rondo-cli-<version>-windows-<arch>.zip` 及同名 `.zip.sha256` 文件。
-ZIP 内只有四个文件：CLI、`manifest.json`、`README.txt`、`THIRD_PARTY_NOTICES.md`。
+ZIP 内有五个文件：CLI、`manifest.json`、`README.txt`、`LICENSE`、`THIRD_PARTY_NOTICES.md`。
 清单记录版本、Schema、架构、EXE 字节数/哈希，以及 CI 构建检出的提交 SHA。
 ZIP 不包含安装器、GUI、演示程序、运行库或用户报告。
 
@@ -15,14 +15,14 @@ ZIP 不包含安装器、GUI、演示程序、运行库或用户报告。
 
 ## 下载后
 
-1. 从可信的成功 CI 运行取得产物。GitHub 的下载容器解压后，先保留其中的 CLI ZIP 与校验文件。
-2. 使用 PowerShell 检查内部 CLI ZIP 的 SHA-256，与同名 `.zip.sha256` 首列比较；一致后解压到稳定目录。
+1. 从 Release 取得匹配架构的 CLI ZIP 与同名校验文件；使用 CI 产物时先确认整个工作流成功。
+2. 使用 PowerShell 检查 CLI ZIP 的 SHA-256，与同名 `.zip.sha256` 首列比较；一致后解压到稳定目录。
 3. 使用本地源码安装器的 `--manifest` 校验解压后的 CLI，再安装 Skill。
 
 ```powershell
 # 请替换实际版本、架构和路径；这里只读取文件。
-Get-FileHash -LiteralPath 'D:\downloads\rondo-cli-2.0.0-dev.9-windows-x64.zip' -Algorithm SHA256
-Get-Content -LiteralPath 'D:\downloads\rondo-cli-2.0.0-dev.9-windows-x64.zip.sha256'
+Get-FileHash -LiteralPath 'D:\downloads\rondo-cli-2.0.0-windows-x64.zip' -Algorithm SHA256
+Get-Content -LiteralPath 'D:\downloads\rondo-cli-2.0.0-windows-x64.zip.sha256'
 
 # 在源码仓库根目录运行；项目目录需要已存在。
 node integrations/installer/src/index.mjs setup --agent codex --scope project --project 'D:\work\my-app' --cli 'D:\tools\Rondo\rondo.exe' --manifest 'D:\tools\Rondo\manifest.json' --dry-run
@@ -31,7 +31,7 @@ node integrations/installer/src/index.mjs setup --agent codex --scope project --
 
 `distribution_checksum: verified` 表示 EXE 与所给清单匹配。安装器随后仍会检查实际 CLI 版本；
 文件校验、CLI 启动、Agent 发现与模型调用是不同层次的验证。没有自动下载或执行清单中的路径/URL。
-`--dry-run` 校验清单但不启动 EXE、不写安装文件。CLI 更新后需按安装器说明显式重新安装。
+`--dry-run` 校验清单但不启动 EXE、不写安装文件。CLI 更新后需按安装器说明执行 `upgrade` 更新绑定。
 
 哈希和清单都来自同一分发渠道，因此只证明内容一致，不能独立证明发布者身份。
 不要用旧版 GUI EXE 或来源不明的文件替换归档中的 CLI。

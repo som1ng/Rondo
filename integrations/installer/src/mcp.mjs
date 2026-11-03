@@ -137,7 +137,7 @@ async function runtimeInputs(options, context, dryRun) {
     cli: { path: cli }, client: { path: client }, roots, allowProcesses: options.allowProcesses === true };
   if (!dryRun) {
     runtime.cli = await (context.probeCli || probeCli)(cli);
-    if (runtime.cli.tool_version !== '2.0.0-dev.9') fail('MCP_CLI_VERSION', 'The MCP adapter requires CLI dev.9.');
+    if (!['2.0.0-dev.9', '2.0.0'].includes(runtime.cli.tool_version)) fail('MCP_CLI_VERSION', 'MCP requires CLI 2.0.0 or dev.9 with its matching adapter.');
     if (distribution) {
       if (distribution.sha256 !== runtime.cli.sha256 || distribution.tool_version !== runtime.cli.tool_version
           || distribution.schema_version !== runtime.cli.schema_version) fail('DISTRIBUTION_MISMATCH', 'CLI differs from its distribution manifest.');

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(DLLInjector LANGUAGES C CXX)
+project(DLLInjector VERSION 2.0.0 LANGUAGES C CXX)
 
 if(NOT WIN32)
     message(FATAL_ERROR "DLLInjector currently requires a Windows toolchain.")

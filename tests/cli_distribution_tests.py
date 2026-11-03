@@ -18,9 +18,9 @@ import package_cli
 
 NATIVE_CLI = None
 NATIVE_ARCH = None
-VERSION_JSON = {'command': 'version', 'status': 'success', 'tool_version': '2.0.0-dev.9',
-    'schema_version': '1.6', 'data': {'text': '2.0.0-dev.9'}, 'execution': {'operation_completed': True}}
-MEMBERS = {'rondo.exe', 'manifest.json', 'README.txt', 'THIRD_PARTY_NOTICES.md'}
+VERSION_JSON = {'command': 'version', 'status': 'success', 'tool_version': '2.0.0',
+    'schema_version': '1.6', 'data': {'text': '2.0.0'}, 'execution': {'operation_completed': True}}
+MEMBERS = {'rondo.exe', 'manifest.json', 'README.txt', 'LICENSE', 'THIRD_PARTY_NOTICES.md'}
 
 
 def pe(arch='x64'):
@@ -81,7 +81,7 @@ class DistributionTests(unittest.TestCase):
                 self.assertEqual(Path(result['checksum_file']).read_text(), result['sha256'] + '  ' + archive.name + '\n')
                 with zipfile.ZipFile(archive) as bundle:
                     self.assertEqual(set(bundle.namelist()), MEMBERS)
-                    self.assertEqual(len(bundle.infolist()), 4)
+                    self.assertEqual(len(bundle.infolist()), len(MEMBERS))
                     self.assertTrue(all(not entry.is_dir() for entry in bundle.infolist()))
                     self.assertEqual(bundle.read('rondo.exe'), pe())
                     manifest = json.loads(bundle.read('manifest.json'))
@@ -89,6 +89,7 @@ class DistributionTests(unittest.TestCase):
                     self.assertEqual(manifest['architecture'], 'x64')
                     self.assertEqual(manifest['files']['rondo.exe'], {'size': 256, 'sha256': hashlib.sha256(pe()).hexdigest()})
                     self.assertEqual(bundle.read('THIRD_PARTY_NOTICES.md'), (ROOT / 'docs/THIRD_PARTY_NOTICES.md').read_bytes())
+                    self.assertEqual(bundle.read('LICENSE'), (ROOT / 'LICENSE').read_bytes())
 
     def test_existing_outputs_are_preserved(self):
         with patch.object(package_cli.subprocess, 'run', return_value=self.version):

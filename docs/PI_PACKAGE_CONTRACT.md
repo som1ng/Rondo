@@ -7,8 +7,8 @@ cross-Agent installer or a public npm release.
 - Source: `integrations/skills/windows-dll-doctor` remains authoritative.
   `integrations/pi` generates byte-identical Skill files into an ignored directory.
   No separately maintained Pi Skill, extension code, MCP dependency or binary copy.
-- Package: proposed name `@som1ng/dll-doctor-pi`, version `0.1.0-dev.1`, private,
-  `UNLICENSED`, keyword `pi-package`, explicit `pi.skills` path inside the package.
+- Package: `@som1ng/rondo-pi`, version `0.1.0-dev.1`, private,
+  `MIT`, keyword `pi-package`, explicit `pi.skills` path inside the package.
   Only package metadata, README and the four canonical Skill files enter a pack.
 - Build: no dependency installation or network access. Re-running updates only
   the declared generated files; never recursively removes user files. Generated
@@ -42,6 +42,5 @@ cross-Agent installer or a public npm release.
    the same canonical content against the native CLI.
 
 References: [Pi packages](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/packages.md)
-and the installed Pi 1.4.0 package documentation/help. Public npm availability and
-project licensing must be resolved before publishing; local checks do not claim
-that an `npm:` install command already works.
+and the installed Pi 1.4.0 package documentation/help. The Pi-specific package is
+still local-only; it is separate from the public Rondo CLI package.

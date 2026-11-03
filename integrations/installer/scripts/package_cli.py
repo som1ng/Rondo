@@ -11,7 +11,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[3]
 MAX_CLI_SIZE = 64 * 1024 * 1024
-VERSIONS = ('2.0.0-dev.8', '2.0.0-dev.9')
+VERSIONS = ('2.0.0-dev.8', '2.0.0-dev.9', '2.0.0')
 
 
 def architecture(data):
@@ -48,7 +48,7 @@ def metadata(cli, expected_architecture, revision=None):
             or version.get('tool_version') not in VERSIONS
             or version.get('data', {}).get('text') != version.get('tool_version')
             or version.get('execution', {}).get('operation_completed') is not True):
-        raise ValueError('expected tested Rondo CLI dev.8/dev.9 with Schema 1.6')
+        raise ValueError('expected Rondo CLI 2.0.0 or dev.8/dev.9 with Schema 1.6')
     if cli.read_bytes() != data:
         raise ValueError('CLI changed during its version query')
     manifest = {'format': 1, 'product': 'rondo-cli', 'platform': 'windows',
@@ -60,8 +60,8 @@ def metadata(cli, expected_architecture, revision=None):
 
 def bundle_readme(manifest):
     return ('Rondo CLI ' + manifest['tool_version'] + ' / Windows ' + manifest['architecture'] + '\n\n'
-        'CI download artifact; not a signed release. Project licensing remains unresolved.\n'
-        'Get the archive and its .zip.sha256 file from a trusted build/run. Before extracting,\n'
+        'MIT license; third-party notices are included. This build is not code-signed.\n'
+        'Get the archive and its .zip.sha256 file from the Rondo release. Before extracting,\n'
         'compare Get-FileHash -Algorithm SHA256 <archive.zip> with the checksum file.\n'
         'After extraction, the source Skill installer can check the executable before launch:\n'
         'node integrations/installer/src/index.mjs setup --agent codex --scope project '
@@ -81,7 +81,14 @@ def create_bundle(cli, output, expected_architecture, revision=None):
     files = {'rondo.exe': data,
         'manifest.json': (json.dumps(manifest, indent=2) + '\n').encode('utf-8'),
         'README.txt': bundle_readme(manifest),
+        'LICENSE': (ROOT / 'LICENSE').read_bytes(),
         'THIRD_PARTY_NOTICES.md': (ROOT / 'docs/THIRD_PARTY_NOTICES.md').read_bytes()}
+    basename = 'rondo-cli-' + manifest['tool_version'] + '-windows-' + manifest['architecture'] + '.zip'
+    return {**write_archive(files, output, basename), 'architecture': manifest['architecture'],
+        'tool_version': manifest['tool_version'], 'source_revision': revision}
+
+
+def write_archive(files, output, basename):
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for name, content in files.items():
@@ -92,7 +99,6 @@ def create_bundle(cli, output, expected_architecture, revision=None):
     packed = stream.getvalue()
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    basename = 'rondo-cli-' + manifest['tool_version'] + '-windows-' + manifest['architecture'] + '.zip'
     archive_path = output / basename
     checksum_path = output / (basename + '.sha256')
     if archive_path.exists() or checksum_path.exists():
@@ -111,9 +117,7 @@ def create_bundle(cli, output, expected_architecture, revision=None):
                 raise RuntimeError('unexpected output cleanup path')
             target.unlink()
         raise
-    return {'archive': str(archive_path), 'checksum_file': str(checksum_path), 'sha256': checksum,
-        'architecture': manifest['architecture'], 'tool_version': manifest['tool_version'],
-        'source_revision': revision}
+    return {'archive': str(archive_path), 'checksum_file': str(checksum_path), 'sha256': checksum}
 
 
 def main():

@@ -1,22 +1,23 @@
 # Rondo npm 全局安装包
 
-目标公开包名为 **`@som1ng/rondo`**，命令为 **`rondo`**。当前尚未发布到 npm，不能从公共仓库下载本项目的新包。
-以下是本地构建/CI 归档的可验证安装入口：
+公开包名为 **`@s0m1ng/rondo`**（账号中间为数字 `0`），命令为 **`rondo`**，当前版本 **2.0.0**：
 
 ```powershell
-npm install -g .\som1ng-rondo-0.1.0-dev.9.tgz
+npm install -g @s0m1ng/rondo
 rondo self-check
 rondo --version --json
 rondo doctor 'D:\samples\example.dll' --json
 rondo setup --agent auto --scope project --verify
 ```
 
-公开发布后的目标命令为 `npm install -g @som1ng/rondo`。包名/发布权限和项目许可证尚待发布前确认。
+固定版本可使用 `npm install -g @s0m1ng/rondo@2.0.0`。也可从
+[GitHub Release](https://github.com/som1ng/Rondo/releases/tag/v2.0.0) 下载 `s0m1ng-rondo-2.0.0.tgz` 后本地安装。
+项目自有代码采用 MIT，包内附带 `LICENSE` 和第三方声明。
 Windows PowerShell 若限制 `.ps1` 执行，可使用 `npm.cmd` / `rondo.cmd`；无需改变执行策略。
 
 需要 Windows x86/x64、Node.js 22.19+ 和匹配构建工具的 Microsoft Visual C++ v14 运行库。
 包内含 x64/x86 `rondo.exe`、各自校验清单、MCP 服务/Schema、权威 Skill、安装器和 Node 运行依赖。
-按宿主机器架构选择 CLI；ARM64 不支持。原生 CLI 版本仍为 `2.0.0-dev.9`，npm 包版本独立管理。
+按宿主机器架构选择 CLI；ARM64 不支持。原生 CLI 与 npm 包版本均为 `2.0.0`。
 
 ## 安装后自检
 
@@ -79,7 +80,7 @@ npm 负责全局目录、命令 shim、包版本和运行文件的移除，不�
 卸载 npm 包前，先对需要移除的各项目/用户 Agent 配置执行对应 `rondo uninstall`，再运行：
 
 ```powershell
-npm uninstall -g @som1ng/rondo
+npm uninstall -g @s0m1ng/rondo
 ```
 
 npm 卸载不会扫描项目或删除 Agent 配置。更新 npm 包可能改变绑定的 CLI/服务/Skill；
@@ -144,10 +145,11 @@ rondo recover --integration mcp --agent all --scope user
 python integrations/npm/scripts/package_npm.py --x64 build/msvc-x64/Release/cli/rondo.exe --x86 build/msvc-x86/Release/cli/rondo.exe --output build/npm/stage
 npm ci --prefix build/npm/stage --ignore-scripts --no-audit --no-fund
 npm pack ./build/npm/stage --pack-destination build/npm --ignore-scripts
-python tests/npm_package_tests.py --archive build/npm/som1ng-rondo-0.1.0-dev.9.tgz
+python tests/npm_package_tests.py --archive build/npm/s0m1ng-rondo-2.0.0.tgz
 ```
 
 CI 提供实际 checkout SHA 给 `--revision`；本地复用构建时省略，避免伪造来源。
-只从完整 staging 打包，不对本源码目录直接执行 `npm pack`。
+组装时校验两种 CLI 的版本与 npm 版本一致，并复制许可证。源码包保持 `private`，完整 staging 才可发布。
+只从 staging 打包和发布：`npm publish build/npm/s0m1ng-rondo-2.0.0.tgz --access public`。
 依据：[npm bin 与依赖打包](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/)、
 [npm 全局/归档安装](https://docs.npmjs.com/cli/v11/commands/npm-install/)。

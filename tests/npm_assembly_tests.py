@@ -19,14 +19,14 @@ class AssemblyTests(unittest.TestCase):
         self.source = self.base / 'source'
         self.source.mkdir()
         for name, value in {
-            'integrations/npm/package.json': {'name': '@som1ng/rondo', 'version': '1', 'scripts': {'postinstall': 'never'}, 'dependencies': {}},
+            'integrations/npm/package.json': {'name': '@s0m1ng/rondo', 'version': '2.0.0', 'private': True, 'scripts': {'postinstall': 'never'}, 'dependencies': {}},
             'integrations/installer/package.json': {'dependencies': {}},
             'integrations/mcp/package.json': {'dependencies': {}},
         }.items():
             file = self.source / name
             file.parent.mkdir(parents=True, exist_ok=True)
             file.write_text(json.dumps(value), encoding='utf-8')
-        names = ['integrations/npm/README.md', 'integrations/npm/package-lock.json', 'docs/THIRD_PARTY_NOTICES.md',
+        names = ['LICENSE', 'integrations/npm/README.md', 'integrations/npm/package-lock.json', 'docs/THIRD_PARTY_NOTICES.md',
                  'integrations/installer/src/index.mjs', 'integrations/npm/bin/rondo.mjs', 'integrations/npm/src/launcher.mjs']
         names += [f'integrations/mcp/dist/{name}.js' for name in ('index', 'errors', 'policy', 'reports', 'runner', 'server')]
         names += [f'integrations/mcp/dist/schemas/cli-v{v}.json' for v in ('1', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6')]
@@ -39,7 +39,7 @@ class AssemblyTests(unittest.TestCase):
 
     def assemble(self, output):
         with patch.object(package_npm, 'ROOT', self.source), patch.object(package_npm, 'metadata',
-                side_effect=lambda cli, arch, revision: (b'fixture', {'tool_version': 'test', 'architecture': arch})):
+                side_effect=lambda cli, arch, revision: (b'fixture', {'tool_version': '2.0.0', 'architecture': arch})):
             return package_npm.assemble(Path('x64'), Path('x86'), output)
 
     def test_allowlist_and_no_lifecycle_scripts(self):
@@ -48,6 +48,8 @@ class AssemblyTests(unittest.TestCase):
         self.assemble(output)
         self.assertFalse((output / 'integrations/mcp/dist/private.env').exists())
         self.assertNotIn('scripts', json.loads((output / 'package.json').read_text()))
+        self.assertIs(json.loads((output / 'package.json').read_text())['private'], False)
+        self.assertEqual((output / 'LICENSE').read_bytes(), (self.source / 'LICENSE').read_bytes())
         self.assertTrue((output / 'runtime/x86/rondo.exe').is_file())
 
     def test_existing_output_is_untouched(self):
@@ -72,6 +74,13 @@ class AssemblyTests(unittest.TestCase):
         file.write_text(json.dumps({'dependencies': {'missing': '1.0.0'}}))
         with self.assertRaisesRegex(ValueError, 'dependencies differ'):
             self.assemble(self.base / 'new')
+        self.assertFalse((self.base / 'new').exists())
+
+    def test_stale_cli_prevents_release_package(self):
+        with patch.object(package_npm, 'ROOT', self.source), patch.object(package_npm, 'metadata',
+                side_effect=lambda cli, arch, revision: (b'fixture', {'tool_version': '2.0.0' if arch == 'x64' else '2.0.0-dev.9'})):
+            with self.assertRaisesRegex(ValueError, 'match the npm package version'):
+                package_npm.assemble(Path('x64'), Path('x86'), self.base / 'new')
         self.assertFalse((self.base / 'new').exists())
 
 

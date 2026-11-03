@@ -5,7 +5,7 @@
 
 ## 构建与启动
 
-需要 Windows、Node.js 22+、已构建的 **Rondo CLI 2.0.0-dev.9**。
+需要 Windows、Node.js 22+、已构建的 **Rondo CLI 2.0.0**。
 从仓库根目录执行：
 
 ```powershell
@@ -21,7 +21,7 @@ npm run build
 包名暂定 `@som1ng/rondo-mcp`，当前 `private: true`、未发布；不要使用不存在的 npm 安装命令。
 
 也可安装 [完整 Rondo npm 归档](../npm/README.md)，使用 `rondo mcp --allow-root <目录>`；
-包内自带 CLI、已构建服务和依赖，无需传 `--cli`。公开包名 `@som1ng/rondo` 仍待发布。
+包内自带 CLI、已构建服务和依赖，无需传 `--cli`。安装命令为 `npm install -g @s0m1ng/rondo`。
 
 Codex、Claude Code 和 OpenCode 的项目配置可以使用 [本地安装器](../installer/README.md#项目级-mcp-配置)
 生成、校验和卸载；需要显式选择已验证的客户端版本、可信 CLI、构建入口和授权目录。

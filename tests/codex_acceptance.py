@@ -304,7 +304,7 @@ def main():
                               '--scope', 'project', '--project', project], project))['action'] != 'removed':
                 raise HostCheckError('MCP uninstall failed')
             discovery('uninstalled_config', False, True)
-            run([*npm_args, 'uninstall', '-g', '@som1ng/rondo'], base)
+            run([*npm_args, 'uninstall', '-g', '@s0m1ng/rondo'], base)
             if shim.exists():
                 raise HostCheckError('npm uninstall left its launcher behind')
             summary['checks'].append('npm_uninstall')

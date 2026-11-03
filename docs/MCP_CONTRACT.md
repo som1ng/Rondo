@@ -1,7 +1,7 @@
 # Local read-only MCP contract
 
-Status: P3 implementation contract, 2026-10-25. The private package lives in
-`integrations/mcp`; it is not published to npm. Node.js 22+ and Windows are required.
+Status: 2.0.0 contract, updated 2026-11-03. Source lives in `integrations/mcp`;
+the built adapter is bundled in `@s0m1ng/rondo`. Node.js 22+ and Windows are required.
 The adapter uses the [official TypeScript SDK v2](https://ts.sdk.modelcontextprotocol.io/v2/serving/stdio)
 over stdio. It opens no listening port and makes no model or network requests.
 
@@ -11,7 +11,7 @@ over stdio. It opens no listening port and makes no model or network requests.
 [--allow-processes | --allow-pid <PID>...]`
 
 The CLI is explicitly trusted executable code. Startup requires tool version
-`2.0.0-dev.9`, schema `1.6`, and a successful JSON version response. No automatic
+`2.0.0`, schema `1.6`, and a successful JSON version response. No automatic
 download, elevation, shell command, injection or write tool is exposed.
 File tools require at least one explicit allowed root. Process listing requires
 `--allow-processes`; process details/modules require that switch or a matching PID.

@@ -11,8 +11,8 @@ import { selfCheck } from '../src/self-check.mjs';
 
 const execute = promisify(execFile);
 const entry = fileURLToPath(new URL('../bin/rondo.mjs', import.meta.url));
-const version = { command: 'version', status: 'success', tool_version: '2.0.0-dev.9', schema_version: '1.6',
-  data: { text: '2.0.0-dev.9' }, execution: { operation_completed: true } };
+const version = { command: 'version', status: 'success', tool_version: '2.0.0', schema_version: '1.6',
+  data: { text: '2.0.0' }, execution: { operation_completed: true } };
 const item = (report, id) => report.checks.find(check => check.id === id);
 
 async function fixture(t) {
@@ -26,7 +26,7 @@ async function fixture(t) {
     assert.equal(path.dirname(base), await fs.realpath(os.tmpdir())); assert.ok(path.basename(base).startsWith('rondo-self-check-'));
     await fs.rm(base, { recursive: true, maxRetries: 10, retryDelay: 50 });
   });
-  await write('package.json', JSON.stringify({ name: '@som1ng/rondo', version: '0.1.0-dev.8', type: 'module' }));
+  await write('package.json', JSON.stringify({ name: '@s0m1ng/rondo', version: '2.0.0', type: 'module' }));
   const bytes = Buffer.alloc(256); bytes.write('MZ'); bytes.writeUInt32LE(128, 0x3c);
   bytes.write('PE\0\0', 128); bytes.writeUInt16LE(0x8664, 132); bytes.writeUInt16LE(0x20b, 152);
   const cli = await write('runtime/x64/rondo.exe', bytes);

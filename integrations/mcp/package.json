@@ -1,9 +1,9 @@
 {
   "name": "@som1ng/rondo-mcp",
-  "version": "0.1.0-dev.1",
+  "version": "2.0.0",
   "description": "Local read-only MCP adapter for the Windows DLL Doctor CLI",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "engines": { "node": ">=22" },
   "bin": { "rondo-mcp": "dist/index.js" },

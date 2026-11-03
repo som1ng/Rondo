@@ -1,12 +1,21 @@
 # Changelog
 
-## Unreleased — Skill client discovery checks (2026-10-24)
+## 2.0.0 — GUI and npm release (2026-11-03)
+
+- Ship Windows x64/x86 GUI and standalone CLI archives, with version metadata, SHA-256 checksums, MIT license and third-party notices.
+- Publish the complete CLI, MCP, Skill and installer bundle as `@s0m1ng/rondo`; the installed command is `rondo`.
+- Unify native GUI/CLI, npm, MCP and installer versions at 2.0.0; preserve JSON Schema 1.6 and saved-report compatibility.
+- Include read-only process/module and PE diagnostics, DLL Doctor, dependency candidates, JSON/Markdown/HTML reports and offline conversion.
+- Include project/user Agent setup, batch upgrades, interrupted-upgrade recovery, installation self-check and OpenCode V2 support.
+- Preserve the documented limits of static diagnosis, legacy experimental methods and client validation. See the release notes for remaining work.
+
+## Development — Skill client discovery checks (2026-10-24)
 
 - Add opt-in discovery checks for installed Codex/OpenCode clients and Pi's resource loader, including nested Unicode project paths, absent-project cases and Pi project trust.
 - Match the project's canonical Skill path and metadata so global namesakes cannot produce false passes; keep client diagnostics and unrelated skills out of summaries.
 - Record actual discovery scopes and versions separately from model behavior, which remains unevaluated. Add lightweight verifier tests to CTest without requiring agent clients in CI.
 
-## Unreleased — Windows DLL Doctor Skill (2026-10-24)
+## Development — Windows DLL Doctor Skill (2026-10-24)
 
 - Add one portable Agent Skills package for read-only DLL/PE/process diagnosis and saved-report interpretation; native CLI remains `2.0.0-dev.8` / schema `1.6`.
 - Document evidence boundaries, explicit dependency directories, error handling and manual client setup; keep automatic skill selection enabled by default.
