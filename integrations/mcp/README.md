@@ -102,3 +102,5 @@ Codex、Claude Code、OpenCode 的已安装宿主调用验证、版本限定配�
 从 npm 归档安装到项目配置自动发现及真实模型问答的 Codex 验收，见
 [Codex 端到端验收](../../docs/CODEX_ACCEPTANCE.md)；真实模型运行需要显式启用并消耗账户额度。
 架构冲突及用户报告错误 126 的两个后续场景见 [诊断验收](../../docs/CODEX_DIAGNOSTIC_ACCEPTANCE.md)。
+OpenCode `2.2.5` 的 npm 安装、项目自动发现、四项工具调用及卸载见
+[V2 验收](../../docs/OPENCODE_V2_ACCEPTANCE.md)，使用本机固定模型响应。

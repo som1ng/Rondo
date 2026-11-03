@@ -71,6 +71,33 @@ test('native PATH entries take priority within a directory and user locations ar
   assert.deepEqual(found.agents[2].candidates, [{ client: await fs.realpath(user), source: 'user_bin' }]);
 });
 
+test('OpenCode V2 npm discovery selects native scoped packages before legacy launchers', async t => {
+  const f = await fixture(t);
+  await f.write('opencode.ps1');
+  await f.write('node_modules/@opencode/cli/bin/opencode.exe'); // Package launcher may be a non-native script.
+  const legacy = await f.write('node_modules/opencode-ai/bin/opencode.exe');
+  const modern = [];
+  for (const arch of ['x64-baseline', 'x64']) for (const prefix of ['cli/node_modules/@opencode/', '']) {
+    modern.push(await f.write(`node_modules/@opencode/${prefix}cli-windows-${arch}/bin/opencode.exe`));
+  }
+  for (const client of [...modern, legacy]) {
+    assert.deepEqual((await f.discover()).agents[2].candidates, [{ client, source: 'path_npm' }]);
+    await fs.unlink(client);
+  }
+  assert.deepEqual((await f.discover()).agents[2].candidates, []);
+});
+
+test('OpenCode scoped npm discovery uses the selected architecture', async t => {
+  const f = await fixture(t);
+  await f.write('opencode.cmd');
+  await f.write('node_modules/@opencode/cli-windows-x64-baseline/bin/opencode.exe');
+  const client = await f.write('node_modules/@opencode/cli-windows-arm64/bin/opencode.exe');
+  f.context.arch = 'arm64';
+  assert.deepEqual((await f.discover()).agents[2].candidates, [{ client, source: 'path_npm' }]);
+  f.context.arch = 'ia32';
+  assert.deepEqual((await f.discover()).agents[2].candidates, []);
+});
+
 test('Codex hoisted/vendor layouts and user npm prefix are discovered without scanning packages', async t => {
   const f = await fixture(t);
   f.context.env = { APPDATA: f.home };

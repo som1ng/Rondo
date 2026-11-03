@@ -1,6 +1,6 @@
 # Rondo Skill / MCP 安装器
 
-Windows 源码运行版本 `0.1.0-dev.13`，支持 Codex、Claude Code、OpenCode。
+Windows 源码运行版本 `0.1.0-dev.14`，支持 Codex、Claude Code、OpenCode。
 准备 Node.js 22.19+ 和可信的 Rondo CLI `2.0.0-dev.8` 或 `dev.9`（Schema 1.6）。
 默认 Skill 模式无需安装 npm 依赖。包尚未发布；当前从本仓库运行。
 项目级或用户级 MCP 配置使用 `--integration mcp`，需要安装本目录依赖，见下文。
@@ -57,6 +57,8 @@ node integrations/installer/src/index.mjs setup --agent auto --select claude --s
 
 `list-agents` 只读 PATH、用户 `.local/bin` 与 `%APPDATA%/npm` 中的已知原生 EXE 位置，
 支持当前 npm 包的固定 Windows 布局，不执行 `.cmd` / `.ps1`，不导入包代码或扫描整个磁盘。
+OpenCode V2 支持 `@opencode/cli` 的嵌套/提升平台包，x64 优先选择 `cli-windows-x64-baseline` 的原生 EXE；
+同时保留 V1 `opencode-ai` 路径。包根目录中的同名启动文件不作为 V2 原生客户端候选。
 结果是**候选文件**，不是来源可信、版本兼容或客户端成功启动的证明。
 同名但不同路径会分别列出；实际来源和版本应由用户确认，MCP 正式安装还会执行已有版本校验。
 Node 架构随检测结果输出，不等同于操作系统 CPU 架构或二进制兼容性验证。
@@ -227,7 +229,7 @@ rondo recover --integration mcp --agent all --scope user
 
 ## 项目级 MCP 配置
 
-支持 Codex **0.164.0**、Claude Code **2.1.310**、OpenCode **1.19.4 (V1)**；
+支持 Codex **0.164.0**、Claude Code **2.1.310**、OpenCode **1.19.4 (V1)** 和 **2.2.5 (V2)**；
 其他版本会明确拒绝，尚未验证其配置兼容性。准备 CLI **dev.9 / Schema 1.6**、
 已构建的 [MCP 服务](../mcp/README.md) 和客户端原生 `.exe`（不接受 `.cmd` / `.ps1` 包装器）。
 安装器不下载或复制这些运行文件，移动/更新后可使用显式 `upgrade` 重新绑定。
@@ -250,10 +252,20 @@ node integrations/installer/src/index.mjs uninstall --integration mcp --agent co
 | OpenCode | 已有 `opencode.jsonc` 或 `opencode.json`；无配置时创建 `.json`；同时存在则拒绝 |
 
 仅管理 `dll_doctor` 条目，保留其他设置和注释。已有同名手动配置、被修改的托管条目、
-重复键、损坏配置或链接路径会阻止写入。相同安装返回 `unchanged`；更换路径或授权目录需先卸载。
+重复键、损坏配置或链接路径会阻止写入。相同安装返回 `unchanged`；更换路径或授权目录使用显式 `upgrade`。
 若 JSONC 编辑会删除相邻注释，也会保留原文件并报错，请先调整注释位置。
 默认只开放显式授权的目录；需要查询进程时在 setup 中明确加 `--allow-processes`。
 支持可选的 CLI `--manifest` 校验。`--dry-run` 不启动客户端、CLI 或 MCP 服务。
+
+OpenCode V2 新安装写入 `mcp.servers.dll_doctor`，设置 `disabled: false` 和 `codemode: false`，
+让七个工具直接出现在客户端工具清单。V1 使用 `mcp.dll_doctor` / `enabled: true`。
+新安装预览无法读取客户端版本，因此返回 `managed_entries_by_client_version` 中的两种候选配置；
+正式安装执行版本探测后选择对应布局。
+
+V1 客户端升级到 V2 后，显式运行 `upgrade` 更新客户端绑定。已有受管 V1 条目保留原布局，
+由 V2 兼容读取，恢复记录仍只需替换受管条目。原生 V2 布局不能直接降级给 V1 使用。
+同名条目同时存在于两种布局、手动迁移受管条目或修改 Code Mode 设置时会报冲突并保留文件。
+安装与验收步骤见 [OpenCode V2 验收记录](../../docs/OPENCODE_V2_ACCEPTANCE.md)。
 
 正式 setup 在写入前检查客户端/CLI 版本，并启动 MCP 服务验证握手和七个只读工具；
 `--verify` 额外在写入后复查。独立 verify 也检查记录的 CLI/入口脚本哈希和 Node 路径。
@@ -289,7 +301,7 @@ rondo uninstall --integration mcp --agent codex --scope user --dry-run
 | --- | --- | --- |
 | Codex | `~/.codex/config.toml`；设置 `CODEX_HOME` 时使用其 `config.toml` | 默认 `~/.dll-doctor/mcp-user-codex.json`；自定义目录见实际输出 |
 | Claude Code | `~/.claude.json` 的顶层 `mcpServers.dll_doctor` | `~/.dll-doctor/mcp-user-claude.json` |
-| OpenCode V1 | `~/.config/opencode/opencode.jsonc` 或 `.json`；无文件时创建 `.json` | `~/.config/opencode/.dll-doctor/mcp-user-opencode.json` |
+| OpenCode V1/V2 | `~/.config/opencode/opencode.jsonc` 或 `.json`；无文件时创建 `.json` | `~/.config/opencode/.dll-doctor/mcp-user-opencode.json` |
 
 `~` 是当前 Windows 用户目录。`CODEX_HOME` 必须是已经存在的本地绝对目录；安装器只读取它，不修改环境变量。
 尚未验证的覆盖方式明确拒绝：Claude 的 `CLAUDE_CONFIG_DIR`，OpenCode 的 `XDG_CONFIG_HOME`、
@@ -339,10 +351,14 @@ node integrations/installer/src/index.mjs setup --integration mcp --agent all --
 校验及 PE 查询；未设置时该项明确标为跳过。真实客户端发现可运行仓库的
 `python tests/installer_hosts.py --cli <cli.exe> --codex <codex.exe> --opencode <opencode.exe>`。
 后者使用临时项目，客户端必须已安装且参数为原生 EXE，不调用模型 API。
+其中 OpenCode Skill 发现脚本对应 V1 `1.19.4`，不能据此声称 V2 Skill 发现已验证。
 
 同时设置 `DLL_INSTALLER_TEST_MCP` 为构建后的 MCP `index.js` 绝对路径，可运行真实 MCP 握手测试。
 生成配置的真实宿主测试见 `tests/mcp_installer_hosts.py --help`，使用隔离临时项目和本地固定模型响应，
 不调用付费模型 API；这是显式配置加载验证，不是自动项目发现测试。
+上述 MCP 宿主脚本的 OpenCode 路径同样针对 V1。V2 `2.2.5` 使用
+`tests/opencode_acceptance.py`，验证 npm 安装、项目自动发现、四项工具调用和卸载；
+仅使用本机固定模型响应，运行方式见 [V2 验收记录](../../docs/OPENCODE_V2_ACCEPTANCE.md)。
 
 两个宿主脚本增加 `--auto` 可验证“候选探测 → 显式选择 → 安装 → 客户端检查”的完整路径。
 测试所提供的客户端 EXE 必须也能被 `list-agents` 检出。

@@ -11,7 +11,7 @@ import { verifyDistribution } from './distribution.mjs';
 import { SERVER_NAME, hash, inspectConfig, addEntry, updateEntry, removeEntry, assertOwned, mcpEntry } from './mcp-config.mjs';
 
 const execute = promisify(execFile);
-const versions = { codex: '0.164.0', claude: '2.1.310', opencode: '1.19.4' };
+const versions = { codex: ['0.164.0'], claude: ['2.1.310'], opencode: ['1.19.4', '2.2.5'] };
 const toolNames = ['analyze_dependencies', 'diagnose_dll', 'inspect_pe', 'inspect_process', 'list_modules', 'list_processes', 'read_report'];
 const json = value => Buffer.from(JSON.stringify(value, null, 2) + '\n');
 const same = (left, right) => left === null || right === null ? left === right : left.equals(right);
@@ -82,9 +82,17 @@ export async function probeClient(agent, file) {
   let value;
   try { value = (await execute(file, ['--version'], { windowsHide: true, timeout: 10000, maxBuffer: 4096 })).stdout.trim(); }
   catch { fail('MCP_CLIENT', 'Client version probe failed; provide its installed native EXE.'); }
-  const match = /^(?:codex-cli\s+)?([0-9]+\.[0-9]+\.[0-9]+)(?:\s+\(Claude Code\))?$/.exec(value);
-  if (!match || match[1] !== versions[agent]) fail('MCP_CLIENT_VERSION', 'This adapter is tested with ' + agent + ' ' + versions[agent] + '.');
-  return { path: file, version: match[1] };
+  return { path: file, version: clientVersion(agent, value) };
+}
+
+export function clientVersion(agent, value) {
+  const pattern = agent === 'opencode' ? /^(?:opencode v)?([0-9]+\.[0-9]+\.[0-9]+)$/
+    : /^(?:codex-cli\s+)?([0-9]+\.[0-9]+\.[0-9]+)(?:\s+\(Claude Code\))?$/;
+  const match = pattern.exec(value);
+  if (!match || !versions[agent]?.includes(match[1])) {
+    fail('MCP_CLIENT_VERSION', 'This adapter is tested with ' + agent + ' ' + versions[agent]?.join(' / ') + '.');
+  }
+  return match[1];
 }
 
 export async function checkServer(runtime) {
@@ -180,7 +188,8 @@ export function parseReceipt(bytes, agent, scope, relative) {
         || (record.scope ?? 'project') !== scope || record.config !== relative || !record.runtime || !record.ownership
         || typeof record.ownership.configCreated !== 'boolean' || typeof record.ownership.containerCreated !== 'boolean'
         || !/^[0-9a-f]{64}$/.test(record.ownership.installedHash)
-        || !isDeepStrictEqual(record.entry, mcpEntry(agent, record.runtime))) throw new Error();
+        || !isDeepStrictEqual(record.entry, mcpEntry(agent, record.runtime, record.entry))
+        || (agent === 'opencode' && record.entry.enabled !== true && record.runtime.client?.version !== '2.2.5')) throw new Error();
     return record;
   } catch { fail('MCP_RECEIPT', 'MCP ownership receipt is invalid.'); }
 }
@@ -238,7 +247,10 @@ export async function installMcp(command, options, context = {}) {
     receiptAfter = upgradeRollback.receiptBefore;
   } else if (bindingCommand) {
     runtime = await runtimeInputs(options, context, options.dryRun);
-    const entry = mcpEntry(options.agent, runtime);
+    const entry = mcpEntry(options.agent, runtime, record?.entry);
+    if (options.agent === 'opencode' && entry.enabled !== true && runtime.client.version === '1.19.4') {
+      fail('MCP_CLIENT_VERSION', 'Native V2 configuration requires OpenCode 2.2.5; a V1 downgrade cannot reuse it.');
+    }
     if (record && command === 'setup') {
       if (!isDeepStrictEqual(entry, record.entry) || (!options.dryRun && !isDeepStrictEqual(runtime, record.runtime))) {
         fail('MCP_CONFLICT', 'A different managed runtime/policy exists; use upgrade explicitly.');
@@ -261,7 +273,10 @@ export async function installMcp(command, options, context = {}) {
     receiptAfter = null;
   }
   if (options.dryRun) return { ...result, action: 'preview', executable_probes: 'not_run',
-    ...(runtime ? { managed_entry: mcpEntry(options.agent, runtime) } : {}) };
+    ...(runtime ? options.agent === 'opencode' && !record
+      ? { managed_entries_by_client_version: Object.fromEntries(versions.opencode.map(version =>
+        [version, mcpEntry(options.agent, { ...runtime, client: { ...runtime.client, version } })])) }
+      : { managed_entry: mcpEntry(options.agent, runtime, record?.entry) } : {}) };
   const made = [], journal = [];
   let lock, recovery, keepRecovery = false;
   try {
