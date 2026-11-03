@@ -62,7 +62,7 @@ jobs:
         if: matrix.architecture == 'msvc-x64' && matrix.configuration == 'release'
         run: python tests/opencode_acceptance_tests.py
       - name: Install GUI test dependencies
-        if: matrix.architecture == 'msvc-x64' && matrix.configuration == 'release'
+        if: matrix.configuration == 'release'
         working-directory: tests/gui
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Test GUI layout and interactions in Edge
@@ -115,7 +115,7 @@ jobs:
           path: |
             build/distribution/${{ matrix.architecture }}/*.zip
             build/distribution/${{ matrix.architecture }}/*.zip.sha256
-      - name: Test GUI distribution packaging and relocated startup
+      - name: Test GUI distribution packaging and relocated WebView startup
         if: matrix.configuration == 'release'
         run: |
           $bundleArch = '${{ matrix.architecture }}'.Replace('msvc-', '')
@@ -220,6 +220,8 @@ jobs:
       - name: Bundle runtime dependencies and pack
         run: |
           npm ci --prefix build/npm/stage --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm pkg set private=false --json --prefix build/npm/stage
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm pack ./build/npm/stage --pack-destination build/npm --ignore-scripts
       - name: Verify offline global install and uninstall

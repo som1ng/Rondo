@@ -48,7 +48,7 @@ class AssemblyTests(unittest.TestCase):
         self.assemble(output)
         self.assertFalse((output / 'integrations/mcp/dist/private.env').exists())
         self.assertNotIn('scripts', json.loads((output / 'package.json').read_text()))
-        self.assertIs(json.loads((output / 'package.json').read_text())['private'], False)
+        self.assertIs(json.loads((output / 'package.json').read_text())['private'], True)
         self.assertEqual((output / 'LICENSE').read_bytes(), (self.source / 'LICENSE').read_bytes())
         self.assertTrue((output / 'runtime/x86/rondo.exe').is_file())
 

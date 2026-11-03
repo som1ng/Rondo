@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -81,6 +82,11 @@ class GuiDistributionTests(unittest.TestCase):
         self.assertEqual(package_gui.product_version(extracted / 'Rondo.exe'), '2.0.0')
         run = subprocess.run([str(SMOKE), 'gui', str(extracted / 'Rondo.exe')], capture_output=True, timeout=30)
         self.assertEqual(run.returncode, 0, run.stderr.decode('utf-8', errors='replace'))
+        node = shutil.which('node')
+        self.assertIsNotNone(node, 'Node.js is required for the native WebView startup check')
+        run = subprocess.run([node, str(ROOT / 'tests/gui/native-smoke.mjs'), str(extracted / 'Rondo.exe')],
+                             cwd=extracted, capture_output=True, timeout=90)
+        self.assertEqual(run.returncode, 0, (run.stdout + run.stderr).decode('utf-8', errors='replace'))
 
 
 if __name__ == '__main__':

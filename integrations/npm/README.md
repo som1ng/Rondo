@@ -143,13 +143,18 @@ rondo recover --integration mcp --agent all --scope user
 
 ```powershell
 python integrations/npm/scripts/package_npm.py --x64 build/msvc-x64/Release/cli/rondo.exe --x86 build/msvc-x86/Release/cli/rondo.exe --output build/npm/stage
+if ($LASTEXITCODE -ne 0) { throw 'Rondo assembly failed' }
 npm ci --prefix build/npm/stage --ignore-scripts --no-audit --no-fund
+if ($LASTEXITCODE -ne 0) { throw 'Runtime dependency installation failed' }
+npm pkg set private=false --json --prefix build/npm/stage
+if ($LASTEXITCODE -ne 0) { throw 'Staging metadata update failed' }
 npm pack ./build/npm/stage --pack-destination build/npm --ignore-scripts
 python tests/npm_package_tests.py --archive build/npm/s0m1ng-rondo-2.0.0.tgz
 ```
 
 CI 提供实际 checkout SHA 给 `--revision`；本地复用构建时省略，避免伪造来源。
-组装时校验两种 CLI 的版本与 npm 版本一致，并复制许可证。源码包保持 `private`，完整 staging 才可发布。
+组装时校验两种 CLI 的版本与 npm 版本一致，并复制许可证。源码包和初始 staging 保持 `private`；
+依赖安装成功后才将 staging 的 `private` 设为布尔值 `false`。
 只从 staging 打包和发布：`npm publish build/npm/s0m1ng-rondo-2.0.0.tgz --access public`。
 依据：[npm bin 与依赖打包](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/)、
 [npm 全局/归档安装](https://docs.npmjs.com/cli/v11/commands/npm-install/)。

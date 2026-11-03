@@ -22,7 +22,7 @@ def assemble(x64, x86, output, revision=None):
     if package['dependencies'] != expected:
         raise ValueError('npm runtime dependencies differ from adapters')
     package.pop('scripts', None)  # No lifecycle scripts or downloads at installation time.
-    package['private'] = False  # Only the complete staging package can be published.
+    package['private'] = True  # The packaging flow enables publication after installing dependencies.
     files = {'package.json': (json.dumps(package, indent=2) + '\n').encode('utf-8')}
     versions = set()
     for arch, cli in (('x64', x64), ('x86', x86)):
