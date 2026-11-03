@@ -1,8 +1,8 @@
 # Third-party notices and provenance
 
-The repository has no project-level LICENSE file. The earlier blanket MIT
-statement was not supported by a license file and has been removed; this audit
-does not choose or grant a new license for the author's code.
+Rondo's project-owned code is covered by the MIT License (see the included `LICENSE` file).
+The maintainer confirmed publication rights for that code and selected MIT on
+2026-11-03. Third-party files and dependencies retain their own licenses below.
 
 ## ReflectiveDLLInjection loader
 
@@ -52,12 +52,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 ## Other source and binary files
 
-No independent provenance verification was established for `src/` or the other
-legacy demos. Their presence in this repository is not evidence that every line
-is original. Legacy binaries under `dll_test/` and `bin/` are ignored and no longer
-tracked. They were not used as build verification artifacts; local copies are retained.
-Resolve project-level licensing and any remaining source attribution before
-publishing a new release.
+The original audit did not establish line-by-line provenance for the legacy
+sources. The maintainer's confirmation above covers project-owned code; it does
+not replace any third-party notice. Legacy binaries under `dll_test/` and `bin/`
+are ignored and untracked. Release binaries are built from the tagged source,
+not copied from those legacy directories.
 
 ## jsoncons (saved JSON reports and GUI messages)
 
@@ -114,13 +113,14 @@ repository does not vendor their source or bundles. Runtime dependencies:
 
 Development dependencies include the official MCP client 2.4.0 (Apache-2.0),
 TypeScript 7.0.2 (Apache-2.0), and Node type declarations 22.20.5 (MIT).
-Their installed packages retain upstream licenses and notices. The adapter is
-private and marked `UNLICENSED`; third-party licenses do not resolve the
-repository's outstanding project-level licensing decision.
+Their installed packages retain upstream licenses and notices, including in the
+bundled Rondo npm distribution. The source adapter package remains private;
+Rondo's adapter code is MIT-licensed.
 
-## Dear ImGui
+## Dear ImGui (historical GUI)
 
-The modern Win32 GUI uses Dear ImGui (v1.91.4) with DirectX 11 backend under `third_party/imgui/`.
+An earlier GUI used Dear ImGui v1.91.4 with a DirectX 11 backend.
+The current WebView2 GUI does not bundle ImGui; this notice is retained for that history.
 Upstream repository: <https://github.com/ocornut/imgui>.
 The upstream MIT license text:
 
@@ -163,5 +163,15 @@ Runtime dependencies are `@modelcontextprotocol/client` 2.4.0 (Apache-2.0),
 `jsonc-parser` 3.3.1 (MIT), and `smol-toml` 1.9.1 (BSD-3-Clause), with their
 transitive dependencies. Installed packages retain their upstream licenses in
 ignored `node_modules`; no dependency source or bundle is vendored here.
-The source installer remains private and `UNLICENSED`. Skill-only operation
-does not import these dependencies.
+The source installer remains private and is MIT-licensed. The complete Rondo npm
+package bundles its runtime dependencies with their upstream license files.
+Skill-only operation does not import these dependencies.
+
+## Microsoft runtime prerequisites
+
+The native binaries require the Microsoft Visual C++ v14 runtime. The GUI also
+uses an installed Microsoft Edge WebView2 Evergreen runtime. Neither runtime is
+redistributed in the Rondo archives; they remain subject to Microsoft's terms.
+
+- VC++: <https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist>
+- WebView2: <https://developer.microsoft.com/en-us/microsoft-edge/webview2/>

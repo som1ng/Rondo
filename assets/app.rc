@@ -4,8 +4,8 @@
 #include <windows.h>
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     2,0,0,9
-PRODUCTVERSION  2,0,0,9
+FILEVERSION     2,0,0,0
+PRODUCTVERSION  2,0,0,0
 FILEFLAGSMASK   0x3fL
 #ifdef _DEBUG
 FILEFLAGS       VS_FF_DEBUG
@@ -22,12 +22,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName",      "som1ng"
             VALUE "FileDescription",  "Rondo - Process Diagnostics & DLL Injection Platform"
-            VALUE "FileVersion",      "2.0.0.9"
+            VALUE "FileVersion",      "2.0.0.0"
             VALUE "InternalName",     "Rondo"
             VALUE "LegalCopyright",   "Copyright (C) 2026 som1ng"
             VALUE "OriginalFilename", "Rondo.exe"
             VALUE "ProductName",      "Rondo"
-            VALUE "ProductVersion",   "2.0.0-dev.9"
+            VALUE "ProductVersion",   "2.0.0"
         END
     END
     BLOCK "VarFileInfo"

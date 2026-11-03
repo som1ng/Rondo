@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { AdapterError } from './errors.js';
 
-export const CLI_VERSION = '2.0.0-dev.9';
+export const CLI_VERSION = '2.0.0';
 export const SCHEMA_VERSION = '1.6';
 const ajv = new Ajv2020({ strict: false, allErrors: false });
 const validators = new Map(['1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6'].map(version => {

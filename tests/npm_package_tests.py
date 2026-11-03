@@ -29,7 +29,11 @@ class PackageTests(unittest.TestCase):
         with tarfile.open(ARCHIVE, 'r:gz') as archive:
             files = {entry.name: entry for entry in archive.getmembers()}
             package = json.load(archive.extractfile('package/package.json'))
-            self.assertEqual(package['name'], '@som1ng/rondo')
+            self.assertEqual(package['name'], '@s0m1ng/rondo')
+            self.assertEqual(package['version'], '2.0.0')
+            self.assertEqual(package['license'], 'MIT')
+            self.assertIs(package['private'], False)
+            self.assertIn('MIT License', archive.extractfile('package/LICENSE').read().decode('utf-8'))
             self.assertEqual(package['bin'], {'rondo': 'integrations/npm/bin/rondo.mjs'})
             self.assertNotIn('scripts', package)
             self.assertTrue(package['bundleDependencies'])
@@ -62,7 +66,7 @@ class PackageTests(unittest.TestCase):
             npm = [NPM, '--prefix', prefix, '--cache', base / 'empty-cache', '--offline',
                    '--registry=http://127.0.0.1:9', '--ignore-scripts', '--no-audit', '--no-fund']
             self.run_command([*npm, 'install', '-g', ARCHIVE])
-            package = prefix / 'node_modules/@som1ng/rondo'
+            package = prefix / 'node_modules/@s0m1ng/rondo'
             shim = prefix / 'rondo.cmd'
             self.assertTrue(shim.is_file())
             readiness = json.loads(self.run_command([shim, 'self-check', '--json']).stdout)
@@ -87,7 +91,8 @@ class PackageTests(unittest.TestCase):
                 finally:
                     missing.write_bytes(original_file)
             version = json.loads(self.run_command([shim, '--version', '--json']).stdout)
-            self.assertEqual(version['tool_version'], '2.0.0-dev.9')
+            self.assertEqual(version['tool_version'], '2.0.0')
+            self.assertEqual(readiness['package_version'], version['tool_version'])
             help_text = json.loads(self.run_command([shim, '--help', '--json']).stdout)['data']['text']
             self.assertIn('rondo doctor', help_text)
             self.assertNotIn('  dllinjector ', help_text)
@@ -297,7 +302,7 @@ try {
             cli.write_bytes(original)
             for agent in ('codex', 'claude'):
                 self.run_command([shim, 'uninstall', '--agent', agent, '--scope', 'project', '--project', project])
-            self.run_command([*npm, 'uninstall', '-g', '@som1ng/rondo'])
+            self.run_command([*npm, 'uninstall', '-g', '@s0m1ng/rondo'])
             self.assertFalse(shim.exists())
             self.assertFalse(package.exists())
             self.assertEqual(marker.read_text(encoding='utf-8'), 'unrelated user file')

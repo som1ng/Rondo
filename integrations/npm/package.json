@@ -1,8 +1,8 @@
 {
-  "name": "@som1ng/rondo",
-  "version": "0.1.0-dev.9",
+  "name": "@s0m1ng/rondo",
+  "version": "2.0.0",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "description": "Rondo Windows CLI, local MCP server and Agent setup",
   "type": "module",
   "os": ["win32"],
@@ -10,7 +10,8 @@
   "engines": { "node": ">=22.19.0" },
   "bin": { "rondo": "integrations/npm/bin/rondo.mjs" },
   "repository": { "type": "git", "url": "git+https://github.com/som1ng/Rondo.git" },
-  "files": ["integrations/", "runtime/", "THIRD_PARTY_NOTICES.md"],
+  "files": ["integrations/", "runtime/", "LICENSE", "THIRD_PARTY_NOTICES.md"],
+  "publishConfig": { "access": "public", "registry": "https://registry.npmjs.org/" },
   "bundleDependencies": true,
   "scripts": { "test": "node --test tests/*.test.mjs" },
   "dependencies": {

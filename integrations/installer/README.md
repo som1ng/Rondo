@@ -1,13 +1,13 @@
 # Rondo Skill / MCP 安装器
 
-Windows 源码运行版本 `0.1.0-dev.14`，支持 Codex、Claude Code、OpenCode。
-准备 Node.js 22.19+ 和可信的 Rondo CLI `2.0.0-dev.8` 或 `dev.9`（Schema 1.6）。
-默认 Skill 模式无需安装 npm 依赖。包尚未发布；当前从本仓库运行。
+Windows 源码运行版本 `2.0.0`，支持 Codex、Claude Code、OpenCode。
+准备 Node.js 22.19+ 和可信的 Rondo CLI `2.0.0`（Schema 1.6）；Skill 安装还兼容 `dev.8` / `dev.9`。
+源码安装器的默认 Skill 模式无需安装 npm 依赖；完整安装器随 Rondo npm 包提供。
 项目级或用户级 MCP 配置使用 `--integration mcp`，需要安装本目录依赖，见下文。
 
 希望全局安装并省去运行文件路径时，使用 [Rondo npm 归档](../npm/README.md)：
 `npm install -g <Rondo.tgz>` 后直接运行 `rondo setup ...`，默认绑定包内 CLI/MCP。
-公开目标包名为 `@som1ng/rondo`，尚未发布。下文保留源码安装器入口和显式路径用法。
+公开包名为 `@s0m1ng/rondo`，使用 `npm install -g @s0m1ng/rondo` 安装。下文保留源码安装器入口和显式路径用法。
 
 ## 安装
 
@@ -230,7 +230,7 @@ rondo recover --integration mcp --agent all --scope user
 ## 项目级 MCP 配置
 
 支持 Codex **0.164.0**、Claude Code **2.1.310**、OpenCode **1.19.4 (V1)** 和 **2.2.5 (V2)**；
-其他版本会明确拒绝，尚未验证其配置兼容性。准备 CLI **dev.9 / Schema 1.6**、
+其他版本会明确拒绝，尚未验证其配置兼容性。准备 CLI **2.0.0 / Schema 1.6**、
 已构建的 [MCP 服务](../mcp/README.md) 和客户端原生 `.exe`（不接受 `.cmd` / `.ps1` 包装器）。
 安装器不下载或复制这些运行文件，移动/更新后可使用显式 `upgrade` 重新绑定。
 

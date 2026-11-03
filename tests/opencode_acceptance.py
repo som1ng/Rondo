@@ -211,7 +211,7 @@ def main():
                         '--registry=http://127.0.0.1:9', '--ignore-scripts', '--no-audit', '--no-fund']
             run([*npm_args, 'install', '-g', archive], base)
             shim = prefix / 'rondo.cmd'
-            package = prefix / 'node_modules/@som1ng/rondo'
+            package = prefix / 'node_modules/@s0m1ng/rondo'
             stage = 'self-check'
             check = json.loads(run([shim, 'self-check', '--json'], project))
             if (check['status'] != 'success' or check['runtime_verification'] != 'passed'
@@ -274,7 +274,7 @@ def main():
                 raise HostCheckError('MCP uninstall left managed configuration behind')
             discovery('uninstalled_config', False)
             stage = 'npm uninstall'
-            run([*npm_args, 'uninstall', '-g', '@som1ng/rondo'], base)
+            run([*npm_args, 'uninstall', '-g', '@s0m1ng/rondo'], base)
             if shim.exists() or package.exists() or marker.read_text(encoding='utf-8') != 'unrelated project file':
                 raise HostCheckError('npm uninstall left package files or changed an unrelated file')
             summary['checks'].append('npm_uninstall')

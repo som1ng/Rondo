@@ -43,7 +43,7 @@ export async function selfCheck(context = {}) {
     const bytes = await fs.readFile(file);
     if (bytes.length > 65536) throw new Error('Package metadata too large');
     const pkg = JSON.parse(bytes);
-    if (pkg.name !== '@som1ng/rondo' || typeof pkg.version !== 'string'
+    if (pkg.name !== '@s0m1ng/rondo' || typeof pkg.version !== 'string'
         || !/^\d+\.\d+\.\d+(?:-[\da-zA-Z.-]+)?$/.test(pkg.version)) throw new Error('Invalid package');
     result.package_version = pkg.version;
   }, 'RONDO_PACKAGE', 'Rondo package metadata is missing or invalid.', repair);

@@ -22,6 +22,7 @@ def assemble(x64, x86, output, revision=None):
     if package['dependencies'] != expected:
         raise ValueError('npm runtime dependencies differ from adapters')
     package.pop('scripts', None)  # No lifecycle scripts or downloads at installation time.
+    package['private'] = True  # The packaging flow enables publication after installing dependencies.
     files = {'package.json': (json.dumps(package, indent=2) + '\n').encode('utf-8')}
     versions = set()
     for arch, cli in (('x64', x64), ('x86', x86)):
@@ -29,9 +30,10 @@ def assemble(x64, x86, output, revision=None):
         versions.add(manifest['tool_version'])
         files[f'runtime/{arch}/rondo.exe'] = data
         files[f'runtime/{arch}/manifest.json'] = (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
-    if len(versions) != 1:
-        raise ValueError('Both CLI architectures must use the same version')
+    if versions != {package['version']}:
+        raise ValueError('Both CLI architectures must match the npm package version')
     sources = {
+        'LICENSE': ROOT / 'LICENSE',
         'README.md': ROOT / 'integrations/npm/README.md',
         'package-lock.json': ROOT / 'integrations/npm/package-lock.json',
         'THIRD_PARTY_NOTICES.md': ROOT / 'docs/THIRD_PARTY_NOTICES.md',

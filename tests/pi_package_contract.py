@@ -82,7 +82,7 @@ class PiPackageContract(unittest.TestCase):
         manifest = json.loads((PACKAGE / 'package.json').read_text(encoding='utf-8'))
         self.assertEqual(manifest['name'], '@som1ng/rondo-pi')
         self.assertIs(manifest['private'], True)
-        self.assertEqual(manifest['license'], 'UNLICENSED')
+        self.assertEqual(manifest['license'], 'MIT')
         self.assertIn('pi-package', manifest['keywords'])
         self.assertFalse(manifest.get('dependencies'))
         self.assertEqual(manifest['pi'], {'skills': ['./' + RESOURCE.as_posix()],

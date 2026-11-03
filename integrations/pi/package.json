@@ -3,7 +3,7 @@
   "version": "0.1.0-dev.1",
   "description": "Read-only Windows DLL Doctor Skill packaged for Pi",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "keywords": ["pi-package", "windows", "dll", "diagnostics"],
   "engines": { "node": ">=22.19.0" },

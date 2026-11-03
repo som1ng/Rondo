@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { verifyDistribution } from './distribution.mjs';
 
-export const VERSION = '0.1.0-dev.14';
+export const VERSION = '2.0.0';
 export const NAME = 'windows-dll-doctor';
 export const FILES = ['SKILL.md', 'references/commands.md', 'references/evidence.md', 'agents/openai.yaml'];
 const BINDING = 'references/installation.json';
@@ -69,9 +69,9 @@ export async function probeCli(file) {
     data = JSON.parse(result.stdout);
   } catch { fail('CLI_PROBE', 'CLI version probe failed, timed out or returned invalid JSON.'); }
   if (!data || data.command !== 'version' || data.status !== 'success' || data.schema_version !== '1.6'
-      || !['2.0.0-dev.8', '2.0.0-dev.9'].includes(data.tool_version)
+      || !['2.0.0-dev.8', '2.0.0-dev.9', '2.0.0'].includes(data.tool_version)
       || data.data?.text !== data.tool_version || data.execution?.operation_completed !== true) {
-    fail('CLI_VERSION', 'Expected tested Rondo CLI dev.8/dev.9 with Schema 1.6.');
+    fail('CLI_VERSION', 'Expected Rondo CLI 2.0.0 (or dev.8/dev.9) with Schema 1.6.');
   }
   return { path: file, tool_version: data.tool_version, schema_version: data.schema_version,
     sha256: digest(await fs.readFile(file)) };

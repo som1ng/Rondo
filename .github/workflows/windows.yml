@@ -62,7 +62,7 @@ jobs:
         if: matrix.architecture == 'msvc-x64' && matrix.configuration == 'release'
         run: python tests/opencode_acceptance_tests.py
       - name: Install GUI test dependencies
-        if: matrix.architecture == 'msvc-x64' && matrix.configuration == 'release'
+        if: matrix.configuration == 'release'
         working-directory: tests/gui
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Test GUI layout and interactions in Edge
@@ -115,6 +115,25 @@ jobs:
           path: |
             build/distribution/${{ matrix.architecture }}/*.zip
             build/distribution/${{ matrix.architecture }}/*.zip.sha256
+      - name: Test GUI distribution packaging and relocated WebView startup
+        if: matrix.configuration == 'release'
+        run: |
+          $bundleArch = '${{ matrix.architecture }}'.Replace('msvc-', '')
+          python tests/gui_distribution_tests.py --gui build/${{ matrix.architecture }}/Release/Rondo.exe --architecture $bundleArch --smoke-tests build/${{ matrix.architecture }}/Release/smoke_tests.exe
+      - name: Package GUI distribution
+        if: matrix.configuration == 'release'
+        run: |
+          $bundleArch = '${{ matrix.architecture }}'.Replace('msvc-', '')
+          python scripts/package_gui.py --gui build/${{ matrix.architecture }}/Release/Rondo.exe --architecture $bundleArch --version 2.0.0 --revision '${{ github.sha }}' --output build/gui-distribution/${{ matrix.architecture }}
+      - name: Upload GUI distribution
+        if: success() && matrix.configuration == 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rondo-gui-${{ matrix.architecture }}
+          if-no-files-found: error
+          path: |
+            build/gui-distribution/${{ matrix.architecture }}/*.zip
+            build/gui-distribution/${{ matrix.architecture }}/*.zip.sha256
       - name: Upload review artifacts
         if: success()
         uses: actions/upload-artifact@v4
@@ -202,9 +221,11 @@ jobs:
         run: |
           npm ci --prefix build/npm/stage --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm pkg set private=false --json --prefix build/npm/stage
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm pack ./build/npm/stage --pack-destination build/npm --ignore-scripts
       - name: Verify offline global install and uninstall
-        run: python tests/npm_package_tests.py --archive build/npm/som1ng-rondo-0.1.0-dev.9.tgz
+        run: python tests/npm_package_tests.py --archive build/npm/s0m1ng-rondo-2.0.0.tgz
       - name: Upload Rondo npm archive
         uses: actions/upload-artifact@v4
         with:

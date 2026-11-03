@@ -1,6 +1,8 @@
 # Local Skill installer contract
 
-For the later explicit upgrade command, see [configuration upgrade](CONFIG_UPGRADE_DELIVERY.md).
+The original installer slice is recorded below. Version 2.0.0 accepts CLI 2.0.0
+and dev.8/dev.9 with Schema 1.6. Current setup, upgrade and recovery commands are
+documented in the [installer README](../integrations/installer/README.md).
 
 Date: 2026-10-25. First P4 installer slice: a source-run Windows installer for
 Codex, Claude Code and OpenCode Skills, using an explicitly supplied local CLI.
