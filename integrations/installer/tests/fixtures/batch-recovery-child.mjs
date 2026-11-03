@@ -23,4 +23,9 @@ try {
     checkpoint: pause, recoveryCheckpoint: pause, batchCheckpoint: pause,
   });
   process.send({ result }); process.disconnect();
-} catch (error) { process.send({ error: error.code || 'FIXTURE_FAILED' }); process.disconnect(); process.exitCode = 1; }
+} catch (error) {
+  // Forward codes only, never the journal path or full error details.
+  process.send({ error: error.code || 'FIXTURE_FAILED',
+    targets: error.details?.targets?.map(({ agent, action, code }) => ({ agent, action, code })) });
+  process.disconnect(); process.exitCode = 1;
+}

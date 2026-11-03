@@ -53,13 +53,18 @@ async function fixture(t, integration = 'skill', scope = 'project') {
     try {
       await Promise.race([new Promise((resolve, reject) => {
         child.once('error', reject);
-        child.once('message', message => message.ready ? resolve() : reject(Object.assign(
-          new Error(`Fixture failed at ${command}/${pause}; child PID ${child.pid}, upgrade owner PID ${ownerPid}`), { code: message.error })));
+        child.once('message', message => {
+          if (message.ready) return resolve();
+          const targets = message.targets;
+          const codes = targets?.map(target => `${target.agent}:${target.code}`).join(', ');
+          reject(Object.assign(new Error(`Fixture failed at ${command}/${pause}; child PID ${child.pid}, upgrade owner PID ${ownerPid}`
+            + (codes ? `; target errors ${codes}` : '')), { code: message.error, details: { targets } }));
+        });
       }), closed.then(() => { throw new Error('Fixture ended before checkpoint'); }),
       new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Fixture timeout')), 20000); })]);
     } catch (error) { await stop(); throw error; }
     finally { clearTimeout(timer); }
-    return { stop };
+    return { stop, pid: child.pid };
   };
   t.after(async () => {
     for (const stop of children) await stop();
@@ -71,10 +76,47 @@ async function fixture(t, integration = 'skill', scope = 'project') {
 }
 async function retryAfterOwnerExit(operation) {
   // Call only after stop() has awaited the original upgrader's close. Another
-  // parallel fixture may reuse that PID; the runtime must still fail closed.
+  // process may reuse that PID; the runtime must still fail closed.
   for (let n = 0; ; n++) try { return await operation(); }
-  catch (error) { if (!['RECOVERY_BUSY', 'RECOVERY_ACTIVE'].includes(error.code) || n >= 20) throw error; await new Promise(resolve => setTimeout(resolve, 100)); }
+  catch (error) {
+    const transient = code => ['RECOVERY_BUSY', 'RECOVERY_ACTIVE'].includes(code);
+    const targets = error.details?.targets;
+    const retryable = transient(error.code) || (error.code === 'RECOVERY_CONFLICT' && Array.isArray(targets)
+      && targets.length > 0 && targets.every(target => transient(target.code)));
+    if (!retryable || n >= 20) throw error;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
 }
+
+test('post-exit retry handles wrapped owner activity but preserves actual conflicts', async t => {
+  const f = await fixture(t, 'mcp'), child = await f.start('upgrade', 'target-completed', { agent: 'codex' });
+  await child.stop();
+  const partial = await snapshot([...f.paths, f.journal]), originalKill = process.kill;
+  let observations = 0, wrapped;
+  // The batch check sees an exited owner; a subsequent target check sees its PID occupied.
+  const probe = t.mock.method(process, 'kill', (pid, signal) => {
+    if (pid !== child.pid) return originalKill.call(process, pid, signal);
+    if (++observations === 1) throw Object.assign(new Error('owner exited'), { code: 'ESRCH' });
+    return true;
+  });
+  try {
+    await assert.rejects(recoverAll(f.query, f.context), error => {
+      assert.equal(error.code, 'RECOVERY_CONFLICT');
+      assert.deepEqual(error.details.targets, [{ agent: 'codex', action: 'failed', code: 'RECOVERY_ACTIVE' }]);
+      wrapped = error; return true;
+    });
+  } finally { probe.mock.restore(); }
+  await unchanged(partial);
+  let attempts = 0;
+  const recovered = await retryAfterOwnerExit(() => { if (++attempts === 1) throw wrapped; return recoverAll(f.query, f.context); });
+  assert.ok(attempts >= 2); assert.equal(recovered.action, 'restored'); await unchanged(f.before);
+  for (const targets of [undefined, [], [{ code: 'RECOVERY_CONFLICT' }], [{ code: 'RECOVERY_ACTIVE' }, { code: 'RECOVERY_CONFLICT' }]]) {
+    const conflict = Object.assign(new Error('fixture conflict'), { code: 'RECOVERY_CONFLICT', details: { targets } });
+    let calls = 0;
+    await assert.rejects(retryAfterOwnerExit(() => { calls++; throw conflict; }), error => error === conflict);
+    assert.equal(calls, 1);
+  }
+});
 
 for (const integration of ['skill', 'mcp']) {
   for (const scope of ['project', 'user']) {
